@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import {loginUser} from "../api/api.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const LoginPage = () => {
+    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [errors, setErrors] = useState({});
-    const navigate = useNavigate();
     const [apiError, setApiError] = useState(null);
-
+    const navigate = useNavigate();
     const validateForm = () => {
         const newErrors = {};
         if (!email) newErrors.email = 'Email обов\'язковий';
@@ -24,18 +24,12 @@ const LoginPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
-
-        try {
-            const response = await loginUser({ email, password });
-            localStorage.setItem('token', response.token);
-            navigate('/');
-        } catch (error) {
-            setApiError(error.message);
-
-            if (error.errors) {
-                setErrors(prev => ({ ...prev, ...error.errors }));
-            }
+        const result = await login({ email, password });
+        if (!result.success) {
+            setApiError(result.error);
+            return;
         }
+        navigate('/');
     };
     return (
         <motion.div
