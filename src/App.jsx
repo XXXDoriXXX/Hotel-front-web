@@ -4,6 +4,7 @@ import RegisterPage from './pages/RegisterPage'
 import HomePage from "./pages/HomePage.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
+import HotelPage from "./pages/HotelPage.jsx";
 
 function App() {
     return (
@@ -16,6 +17,14 @@ function App() {
                 element={
                     <PrivateRoute>
                         <Dashboard />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/hotels/:id"
+                element={
+                    <PrivateRoute>
+                        <HotelPage  />
                     </PrivateRoute>
                 }
             />

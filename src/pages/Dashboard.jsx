@@ -45,8 +45,7 @@ const Dashboard = () => {
     hover:shadow-md
     transition-all
     focus:outline-none focus:ring-2 focus:ring-blue-300
-  "
-            >
+  ">
                 <FaUserCircle className="text-3xl" /> {/* Іконка з розміром */}
             </button>
             </header>
