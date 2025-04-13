@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import MapPicker from "../components/MapPicker.jsx";
 import { api } from '../api/api';
 import {
     FaArrowLeft,
@@ -14,10 +15,13 @@ import {
     FaSave
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import {GOOGLE_MAPS_API} from "../api/api.js";
 
 const HotelPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [isMapOpen, setIsMapOpen] = useState(false);
+    const [originalData, setOriginalData] = useState(null);
     const [hotel, setHotel] = useState(null);
     const [rooms, setRooms] = useState([]);
     const [stats, setStats] = useState(null);
@@ -50,13 +54,32 @@ const HotelPage = () => {
         try {
             await api.put(`/hotels/${id}`, {
                 name: editData.name,
-                description: editData.description
+                description: editData.description,
+                address: {
+                    street: editData.street,
+                    city: editData.city,
+                    state: editData.state,
+                    country: editData.country,
+                    postal_code: editData.postal_code,
+                    latitude: editData.latitude,
+                    longitude: editData.longitude,
+                },
             });
-            setHotel(prev => ({...prev, ...editData}));
+            setHotel((prev) => ({ ...prev, ...editData }));
             setIsEditing(false);
         } catch (err) {
             console.error('Помилка оновлення:', err);
         }
+    };
+    useEffect(() => {
+        if (hotel) {
+            setOriginalData(hotel);
+        }
+    }, [hotel]);
+
+    const handleCancel = () => {
+        setEditData(originalData);
+        setIsEditing(false);
     };
 
     const handleImageUpload = async (e) => {
@@ -140,27 +163,74 @@ const HotelPage = () => {
                 <div className="flex justify-between items-start mb-8">
                     <div>
                         {isEditing ? (
-                            <input
-                                type="text"
-                                value={editData.name}
-                                onChange={(e) => setEditData({...editData, name: e.target.value})}
-                                className="text-2xl font-bold border-b border-blue-500 mb-2 w-full"
-                            />
+                            <>
+                                <input
+                                    type="text"
+                                    value={editData.name}
+                                    onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                                    className="text-2xl font-bold border-b border-blue-500 mb-2 w-full"
+                                />
+                                <button
+                                    onClick={() => setIsMapOpen(true)}
+                                    className="!bg-gray-200 text-blue-600 px-4 py-2 rounded-lg mt-2"
+                                >
+                                    Change Address
+                                </button>
+                            </>
                         ) : (
                             <h2 className="text-2xl font-bold text-gray-800 mb-2">{hotel.name}</h2>
                         )}
                         <p className="text-gray-600">
-                            {hotel.address?.street}, {hotel.address?.city}, {hotel.address?.country}
+                            {isEditing
+                                ? `${editData.street || ''}, ${editData.city || ''}, ${editData.country || ''}`
+                                : `${hotel.address?.street || ''}, ${hotel.address?.city || ''}, ${hotel.address?.country || ''}`}
                         </p>
                     </div>
-                    <button
-                        onClick={isEditing ? handleSave : () => setIsEditing(true)}
-                        className="!bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-                    >
-                        {isEditing ? <FaSave /> : <FaEdit />}
-                        {isEditing ? 'Зберегти' : 'Редагувати'}
-                    </button>
+                    <div className="flex gap-2">
+                        {isEditing && (
+                            <button
+                                onClick={handleCancel}
+                                className="!bg-gray-200 text-gray-700 px-4 py-2 rounded-lg"
+                            >
+                                Cancel
+                            </button>
+                        )}
+                        <button
+                            onClick={isEditing ? handleSave : () => setIsEditing(true)}
+                            className="!bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                        >
+                            {isEditing ? 'Save' : 'Edit'}
+                        </button>
+                    </div>
                 </div>
+
+
+                {isMapOpen && (
+                    <MapPicker
+                        onLocationSelect={async (pos) => {
+                            const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${pos.lat},${pos.lng}&key=${GOOGLE_MAPS_API}`);
+                            const data = await res.json();
+                            const comp = data.results[0]?.address_components || [];
+
+                            const get = (type) => comp.find((c) => c.types.includes(type))?.long_name || '';
+
+                            setEditData((prev) => ({
+                                ...prev,
+                                street: `${get('route')} ${get('street_number')}`.trim(),
+                                city: get('locality'),
+                                state: get('administrative_area_level_1'),
+                                country: get('country'),
+                                postal_code: get('postal_code'),
+                                latitude: pos.lat,
+                                longitude: pos.lng,
+                            }));
+
+                            setIsMapOpen(false); // Close the map picker
+                        }}
+                        onClose={() => setIsMapOpen(false)}
+                    />
+                )}
+
 
                 {/* Таби */}
                 <div className="flex border-b !border-gray-200 mb-6">
@@ -316,7 +386,6 @@ const HotelPage = () => {
     );
 };
 
-// Компонент картки статистики
 const StatCard = ({ icon, title, value }) => (
     <div className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition">
         <div className="flex items-center justify-between">

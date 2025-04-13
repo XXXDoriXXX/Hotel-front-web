@@ -8,7 +8,7 @@ const MapPicker = ({ onLocationSelect }) => {
     const [marker, setMarker] = useState(center);
 
     const { isLoaded } = useJsApiLoader({
-        googleMapsApiKey: 'AIzaSyCWzyQ9QxTFJonvEXp-ZZ7qsyNN5YtiWbw', // 🔑 сюди свій ключ
+        googleMapsApiKey: 'AIzaSyCWzyQ9QxTFJonvEXp-ZZ7qsyNN5YtiWbw',
         libraries: ['places'],
     });
 

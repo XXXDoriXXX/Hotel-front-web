@@ -44,7 +44,6 @@ export const HotelProvider = ({ children }) => {
             const res = await api.post('/hotels', payload);
             const createdHotel = res.data;
 
-            // Якщо є файл зображення, завантажуємо його
             if (newHotel.imageFile) {
                 const formData = new FormData();
                 formData.append('file', newHotel.imageFile);
@@ -52,7 +51,6 @@ export const HotelProvider = ({ children }) => {
                 await api.post(`/hotels/${createdHotel.id}/images`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
-                // Після завантаження зображення, можемо оновити інформацію про готель
                 createdHotel.images = [{
                     id: 1,
                     hotel_id: createdHotel.id,
@@ -60,7 +58,6 @@ export const HotelProvider = ({ children }) => {
                 }];
             }
 
-            // Додаємо новий готель до списку
             setHotels((prev) => [...prev, createdHotel]);
             resetNewHotel();
         } catch (err) {
