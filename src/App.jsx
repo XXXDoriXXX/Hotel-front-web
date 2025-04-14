@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
 import HotelPage from "./pages/HotelPage.jsx";
 import RoomEditPage from "./pages/RoomEditPage.jsx";
+import HotelEditPage from "./pages/HotelEditPage.jsx";
 
 function App() {
     return (
@@ -42,6 +43,14 @@ function App() {
                 element={
                     <PrivateRoute>
                         <RoomEditPage   />
+                    </PrivateRoute>
+                }
+            />
+            <Route
+                path="/hotels/:id/edit"
+                element={
+                    <PrivateRoute>
+                        <HotelEditPage  />
                     </PrivateRoute>
                 }
             />

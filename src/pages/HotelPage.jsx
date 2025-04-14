@@ -11,76 +11,48 @@ import {
     FaChartLine,
     FaMoneyBillWave,
     FaClipboardList,
-    FaTrash,
-    FaSave
+    FaTrash
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
-import {GOOGLE_MAPS_API} from "../api/api.js";
+import LoadingSpinner from "../components/LoadingSpinner.jsx";
 
 const HotelPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [isMapOpen, setIsMapOpen] = useState(false);
-    const [originalData, setOriginalData] = useState(null);
     const [hotel, setHotel] = useState(null);
     const [rooms, setRooms] = useState([]);
     const [stats, setStats] = useState(null);
     const [activeTab, setActiveTab] = useState('overview');
-    const [isEditing, setIsEditing] = useState(false);
-    const [editData, setEditData] = useState({});
-
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [hotelRes, roomsRes, statsRes] = await Promise.all([
+                const [hotelRes, roomsRes, statsRes, amenitiesRes] = await Promise.all([
                     api.get(`/hotels/${id}`),
                     api.get(`/rooms?hotel_id=${id}`),
-                    api.get(`/hotels/${id}/stats`)
+                    api.get(`/hotels/${id}/stats`),
+                    api.get(`/amenities/hotel`)
                 ]);
-                setHotel(hotelRes.data);
+
+                const hotelData = hotelRes.data;
+                const hotelAmenities = hotelData.amenities || [];
+                const allAmenities = amenitiesRes.data;
+
+                const filteredAmenities = allAmenities.filter((amenity) =>
+                    hotelAmenities.some((ha) => ha.amenity_id === amenity.id)
+                );
+
+                setHotel({ ...hotelData, amenities: filteredAmenities });
                 setRooms(roomsRes.data);
                 setStats(statsRes.data);
-                setEditData(hotelRes.data);
             } catch (err) {
-                console.error('Помилка завантаження:', err);
+                console.error('Error loading data:', err);
                 navigate('/dashboard');
             }
         };
+
         fetchData();
     }, [id, navigate]);
-
-    const handleSave = async () => {
-        try {
-            await api.put(`/hotels/${id}`, {
-                name: editData.name,
-                description: editData.description,
-                address: {
-                    street: editData.street,
-                    city: editData.city,
-                    state: editData.state,
-                    country: editData.country,
-                    postal_code: editData.postal_code,
-                    latitude: editData.latitude,
-                    longitude: editData.longitude,
-                },
-            });
-            setHotel((prev) => ({ ...prev, ...editData }));
-            setIsEditing(false);
-        } catch (err) {
-            console.error('Помилка оновлення:', err);
-        }
-    };
-    useEffect(() => {
-        if (hotel) {
-            setOriginalData(hotel);
-        }
-    }, [hotel]);
-
-    const handleCancel = () => {
-        setEditData(originalData);
-        setIsEditing(false);
-    };
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
@@ -122,117 +94,45 @@ const HotelPage = () => {
         }
     };
 
-    if (!hotel || !stats) return <div className="p-6">Завантаження...</div>;
+    if (!hotel || !stats) return <LoadingSpinner />;
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <header className="!bg-white shadow px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+            <header className="!bg-gradient-to-r from-blue-500 to-blue-700 shadow-lg px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center sticky top-0 z-50">
+
                 <div className="flex items-center space-x-4">
                     <button
                         onClick={() => navigate('/dashboard')}
-                        className="!bg-white text-blue-600 hover:text-blue-800"
+                        className="!bg-white text-blue-600 hover:text-blue-800 p-2 rounded-full shadow-md transition-all"
                     >
                         <FaArrowLeft className="text-xl" />
                     </button>
                     <h1
-                        className="text-xl font-bold text-blue-700 cursor-pointer"
+                        className="text-2xl font-bold text-white cursor-pointer"
                         onClick={() => navigate('/')}
                     >
                         HotelHub
                     </h1>
                 </div>
-                <button
-                    onClick={() => navigate('/profile')}
-                    className="
-    w-16 h-16
-    !rounded-full
-   !bg-white
-    text-blue-700
-    hover:text-blue-900
-    flex items-center justify-center
-    shadow-sm
-    hover:shadow-md
-    transition-all
-    focus:outline-none focus:ring-2 focus:ring-blue-300
-  ">
-                    <FaUserCircle className="text-3xl" />
-                </button>
-            </header>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div className="flex justify-between items-start mb-8">
-                    <div>
-                        {isEditing ? (
-                            <>
-                                <input
-                                    type="text"
-                                    value={editData.name}
-                                    onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                                    className="text-2xl font-bold border-b border-blue-500 mb-2 w-full"
-                                />
-                                <button
-                                    onClick={() => setIsMapOpen(true)}
-                                    className="!bg-gray-200 text-blue-600 px-4 py-2 rounded-lg mt-2"
-                                >
-                                    Change Address
-                                </button>
-                            </>
-                        ) : (
-                            <h2 className="text-2xl font-bold text-gray-800 mb-2">{hotel.name}</h2>
-                        )}
-                        <p className="text-gray-600">
-                            {isEditing
-                                ? `${editData.street || ''}, ${editData.city || ''}, ${editData.country || ''}`
-                                : `${hotel.address?.street || ''}, ${hotel.address?.city || ''}, ${hotel.address?.country || ''}`}
-                        </p>
-                    </div>
-                    <div className="flex gap-2">
-                        {isEditing && (
-                            <button
-                                onClick={handleCancel}
-                                className="!bg-gray-200 text-gray-700 px-4 py-2 rounded-lg"
-                            >
-                                Cancel
-                            </button>
-                        )}
-                        <button
-                            onClick={isEditing ? handleSave : () => setIsEditing(true)}
-                            className="!bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-                        >
-                            {isEditing ? 'Save' : 'Edit'}
-                        </button>
-                    </div>
+                <div className="flex items-center gap-4 mt-4 sm:mt-0">
+                    <button
+                        onClick={() => navigate(`/hotels/${id}/edit`)}
+                        className="!bg-white !text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg flex items-center gap-2 shadow-md transition-all"
+                    >
+                        Edit
+                    </button>
+                    <button
+                        onClick={() => navigate('/profile')}
+                        className="w-12 h-12 sm:w-16 sm:h-16 !rounded-full !bg-white text-blue-700 hover:text-blue-900 flex items-center justify-center shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    >
+                        <FaUserCircle className="text-2xl sm:text-3xl" />
+                    </button>
                 </div>
+            </header>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
 
-                {isMapOpen && (
-                    <MapPicker
-                        onLocationSelect={async (pos) => {
-                            const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${pos.lat},${pos.lng}&key=${GOOGLE_MAPS_API}`);
-                            const data = await res.json();
-                            const comp = data.results[0]?.address_components || [];
-
-                            const get = (type) => comp.find((c) => c.types.includes(type))?.long_name || '';
-
-                            setEditData((prev) => ({
-                                ...prev,
-                                street: `${get('route')} ${get('street_number')}`.trim(),
-                                city: get('locality'),
-                                state: get('administrative_area_level_1'),
-                                country: get('country'),
-                                postal_code: get('postal_code'),
-                                latitude: pos.lat,
-                                longitude: pos.lng,
-                            }));
-
-                            setIsMapOpen(false); // Close the map picker
-                        }}
-                        onClose={() => setIsMapOpen(false)}
-                    />
-                )}
-
-
-                {/* Таби */}
                 <div className="flex border-b !border-gray-200 mb-6">
                     {['overview', 'rooms', 'stats'].map((tab) => (
                         <button
@@ -247,37 +147,54 @@ const HotelPage = () => {
                     ))}
                 </div>
 
-                {/* Вміст табів */}
                 <div className="bg-white rounded-xl shadow p-6">
                     {activeTab === 'overview' && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            {isEditing ? (
-                                <textarea
-                                    value={editData.description || ''}
-                                    onChange={(e) => setEditData({...editData, description: e.target.value})}
-                                    className="w-full p-3 border border-gray-300 rounded-lg mb-4"
-                                    rows="5"
-                                    placeholder="Опис готелю"
-                                />
-                            ) : (
-                                <p className="text-gray-700 mb-6">
-                                    {hotel.description || 'Опис відсутній'}
-                                </p>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+                            <h2 className="text-2xl font-bold mb-2">{hotel.name}</h2>
+
+                            <p className="text-gray-700 mb-4">{hotel.description || 'Опис відсутній'}</p>
+
+                            <div className="mb-4 text-sm text-gray-600 space-y-1">
+                                <p><strong>Адреса:</strong> {hotel.address?.street}, {hotel.address?.city}, {hotel.address?.state}, {hotel.address?.country}, {hotel.address?.postal_code}</p>
+                                <p><strong>Координати:</strong> {hotel.address?.latitude}, {hotel.address?.longitude}</p>
+                            </div>
+
+                            {hotel.amenities?.length > 0 && (
+                                <div className="mb-6">
+                                    <h3 className="font-semibold mb-2">Зручності:</h3>
+                                    <div className="p-4 border rounded-lg bg-gray-50">
+                                    <ul className="list-none space-y-4">
+                                        {hotel.amenities.map((a, index) => (
+                                            <li key={index} className="flex items-start gap-4">
+                                                <div>
+                                                    <p className="font-bold text-gray-800">{a.name}</p>
+                                                    {a.description && (
+                                                        <p className="text-gray-600 text-sm">{a.description}</p>
+                                                    )}
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    </div>
+                                </div>
                             )}
+                            <div className="mb-6">
+                                <h3 className="text-lg font-semibold mb-2">Мапа розташування</h3>
+                                <MapPicker
+                                    onLocationSelect={() => {}}
+                                    initialPosition={{
+                                        lat: hotel.address?.latitude || 0,
+                                        lng: hotel.address?.longitude || 0,
+                                    }}
+                                    readonly={true}
+                                />
+                            </div>
 
                             <h3 className="text-lg font-semibold mb-4">Галерея</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                                 {hotel.images?.map((img) => (
                                     <div key={img.id} className="relative group">
-                                        <img
-                                            src={img.image_url}
-                                            alt="Hotel"
-                                            className="w-full h-48 object-cover rounded-lg"
-                                        />
+                                        <img src={img.image_url} alt="Hotel" className="w-full h-48 object-cover rounded-lg" />
                                         <button
                                             onClick={() => deleteImage(img.id)}
                                             className="absolute top-2 right-2 !bg-red-700 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
@@ -292,17 +209,11 @@ const HotelPage = () => {
                                 <label className="!bg-blue-100 text-blue-700 px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-200 transition">
                                     <FaPlus className="inline mr-2" />
                                     Додати фото
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        className="hidden"
-                                    />
+                                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                                 </label>
                             </div>
                         </motion.div>
                     )}
-
                     {activeTab === 'rooms' && (
                         <div>
                             <div className="flex justify-between items-center mb-6">
@@ -327,15 +238,15 @@ const HotelPage = () => {
                                             <div className="flex justify-between">
                                                 <h4 className="font-bold">{room.room_number}</h4>
                                                 <span className="!bg-blue-100 !text-blue-800 px-2 py-1 rounded text-sm">
-                          {room.price_per_night} ₴/ніч
-                        </span>
+                                                    {room.price_per_night} ₴/ніч
+                                                </span>
                                             </div>
                                             <p className="text-gray-600 text-sm mt-2">{room.description}</p>
 
                                             <div className="flex justify-end gap-2 mt-4">
                                                 <button
                                                     onClick={() => navigate(`/hotels/${id}/rooms/${room.id}`)}
-                                                    className="!bg-white  text-blue-600 hover:text-blue-800"
+                                                    className="!bg-white text-blue-600 hover:text-blue-800"
                                                 >
                                                     <FaEdit />
                                                 </button>

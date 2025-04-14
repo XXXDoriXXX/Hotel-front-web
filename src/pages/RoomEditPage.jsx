@@ -102,14 +102,12 @@ const RoomEditPage = () => {
 
         try {
             const payload = {
-                room_data: {
-                    room_number: roomData.room_number,
-                    room_type: roomData.room_type,
-                    places: roomData.places,
-                    price_per_night: roomData.price_per_night,
-                    hotel_id: roomData.hotel_id,
-                    description: roomData.description
-                },
+                room_number: roomData.room_number,
+                room_type: roomData.room_type,
+                places: roomData.places,
+                price_per_night: roomData.price_per_night,
+                hotel_id: roomData.hotel_id,
+                description: roomData.description,
                 amenity_ids: roomData.amenities
             };
 
@@ -125,19 +123,17 @@ const RoomEditPage = () => {
             if (err.response?.data?.detail) {
                 setErrors(err.response.data.detail);
             }
-            console.error('Помилка збереження:', err);
+            console.error('Error saving:', err);
         } finally {
             setIsLoading(false);
         }
     };
-
-
     return (
         <div className="min-h-screen bg-gray-50">
             <header className="bg-white shadow px-6 py-4 flex justify-between items-center sticky top-0 z-50">
                 <div className="flex items-center space-x-4">
                     <button
-                        onClick={() => navigate(`/hotels/${id}/rooms`)}
+                        onClick={() => navigate(`/hotels/${id}/`)}
                         className="!bg-white text-blue-600 hover:text-blue-800"
                     >
                         <FaArrowLeft className="text-xl" />
