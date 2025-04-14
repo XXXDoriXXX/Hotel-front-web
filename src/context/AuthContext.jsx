@@ -4,7 +4,7 @@ import { api } from '../api/api.js';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+     const [user, setUser] = useState(null);
     const isAuthenticated = !!user;
     const isLoading = user === null && !!localStorage.getItem('token');
 
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        getMe(); // автоматично логінить, якщо є токен
+        getMe();
     }, []);
 
     return (

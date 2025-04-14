@@ -12,6 +12,7 @@ const RegisterPage = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [errors, setErrors] = useState({});
     const [apiError, setApiError] = useState(null);
+    const navigate = useNavigate();
 
     const validateForm = () => {
         const newErrors = {};
@@ -37,6 +38,7 @@ const RegisterPage = () => {
             setApiError(result.error);
             return;
         }
+        navigate('/');
     };
 
     return (
@@ -154,7 +156,7 @@ const RegisterPage = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg mb-4 transition-colors duration-300"
+                        className="w-full !bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg mb-4 transition-colors duration-300"
                     >
                         Зареєструватися
                     </motion.button>
