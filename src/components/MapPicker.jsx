@@ -1,15 +1,21 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 
 const containerStyle = { width: '100%', height: '300px' };
-const center = { lat: 48.3794, lng: 31.1656 };
+const defaultCenter = { lat: 48.3794, lng: 31.1656 };
 
-const MapPicker = ({ onLocationSelect }) => {
-    const [marker, setMarker] = useState(center);
+const libraries = ['places'];
+
+const MapPicker = ({ onLocationSelect, initialPosition = defaultCenter, readonly = false }) => {
+    const [marker, setMarker] = useState(initialPosition);
+
+    useEffect(() => {
+        setMarker(initialPosition);
+    }, [initialPosition]);
 
     const { isLoaded } = useJsApiLoader({
-        googleMapsApiKey: 'AIzaSyCWzyQ9QxTFJonvEXp-ZZ7qsyNN5YtiWbw', // 🔑 сюди свій ключ
-        libraries: ['places'],
+        googleMapsApiKey: 'AIzaSyCWzyQ9QxTFJonvEXp-ZZ7qsyNN5YtiWbw',
+        libraries,
     });
 
     const geocodeLatLng = async (lat, lng) => {
@@ -21,13 +27,15 @@ const MapPicker = ({ onLocationSelect }) => {
     };
 
     const onMapClick = useCallback(async (e) => {
+        if (readonly) return;
+
         const lat = e.latLng.lat();
         const lng = e.latLng.lng();
         setMarker({ lat, lng });
 
         const address = await geocodeLatLng(lat, lng);
         onLocationSelect({ lat, lng, address });
-    }, [onLocationSelect]);
+    }, [onLocationSelect, readonly]);
 
     return isLoaded ? (
         <GoogleMap

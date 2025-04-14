@@ -35,18 +35,17 @@ const Dashboard = () => {
                 <h1 className="text-2xl font-bold !text-blue-700 cursor-pointer" onClick={() => navigate('/')}>HotelHub</h1><button
                 onClick={() => navigate('/profile')}
                 className="
-    w-16 h-16
-    !rounded-full
-   !bg-white
-    text-blue-700
-    hover:text-blue-900
-    flex items-center justify-center
-    shadow-sm
-    hover:shadow-md
-    transition-all
-    focus:outline-none focus:ring-2 focus:ring-blue-300
-  "
-            >
+                    w-16 h-16
+                    !rounded-full
+                   !bg-white
+                    text-blue-700
+                    hover:text-blue-900
+                    flex items-center justify-center
+                    shadow-sm
+                    hover:shadow-md
+                    transition-all
+                    focus:outline-none focus:ring-2 focus:ring-blue-300
+                  ">
                 <FaUserCircle className="text-3xl" /> {/* Іконка з розміром */}
             </button>
             </header>
@@ -137,7 +136,7 @@ const Dashboard = () => {
                             </p>
 
                             <MapPicker onLocationSelect={async (pos) => {
-                                const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${pos.lat},${pos.lng}&key=GOOGLE_MAPS_API`);
+                                const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${pos.lat},${pos.lng}&key=${GOOGLE_MAPS_API}`);
                                 const data = await res.json();
                                 const comp = data.results[0]?.address_components || [];
 
