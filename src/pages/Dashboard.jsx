@@ -13,21 +13,54 @@ import {
 } from 'react-icons/fa';
 import MapPicker from "../components/MapPicker.jsx";
 import {GOOGLE_MAPS_API} from "../api/api.js";
+import {api} from '../api/api.js';
 
 const Dashboard = () => {
     const { hotels, newHotel, setNewHotel, createHotel, fetchHotels } = useHotel();
     const navigate = useNavigate();
     const [showAddModal, setShowAddModal] = useState(false);
+    const [hotelRooms, setHotelRooms] = useState({});
+    const [hotelStats, setHotelStats] = useState({});
+
     useEffect(() => {
         fetchHotels();
     }, []);
+
+    const fetchRooms = async (hotelId) => {
+        try {
+            const response = await api.get(`/rooms?hotel_id=${hotelId}`);
+            setHotelRooms((prev) => ({ ...prev, [hotelId]: response.data.length }));
+        } catch (error) {
+            console.error(`Failed to fetch rooms for hotel ${hotelId}:`, error);
+        }
+    };
+
+    const fetchHotelStats = async (hotelId) => {
+        try {
+            const response = await api.get(`/hotels/${hotelId}/stats`);
+            setHotelStats((prev) => ({ ...prev, [hotelId]: response.data }));
+        } catch (error) {
+            console.error(`Failed to fetch stats for hotel ${hotelId}:`, error);
+        }
+    };
+
+    useEffect(() => {
+        hotels.forEach((hotel) => {
+            fetchRooms(hotel.id);
+            fetchHotelStats(hotel.id);
+        });
+    }, [hotels]);
+
+    const calculateRoomCount = () => {
+        return Object.values(hotelRooms).reduce((total, count) => total + count, 0);
+    };
+
     const stats = [
         { label: 'Готелів', value: hotels.length, icon: <FaHotel className="text-3xl text-blue-600" /> },
-        { label: 'Номерів', value: 42, icon: <FaBed className="text-3xl text-green-600" /> },
+        { label: 'Номерів', value: calculateRoomCount(), icon: <FaBed className="text-3xl text-green-600" /> },
         { label: 'Бронювань', value: 15, icon: <FaClipboardList className="text-3xl text-yellow-600" /> },
         { label: 'Дохід', value: '₴12890', icon: <FaMoneyBillWave className="text-3xl text-indigo-600" /> },
     ];
-
 
     return (
         <div className="min-h-screen !bg-gray-100 pb-10">
@@ -94,6 +127,9 @@ const Dashboard = () => {
                                     {hotel.address?.street}, {hotel.address?.city}, {hotel.address?.country}
                                 </p>
                                 <p className="text-sm text-gray-600 mt-2">{hotel.description}</p>
+                                <p className="text-sm text-gray-500 mt-2">
+                                    Кількість номерів: {hotelStats[hotel.id]?.rooms}
+                                </p>
                             </div>
                         </motion.div>
                     ))}
@@ -180,7 +216,7 @@ const Dashboard = () => {
                                     Скасувати
                                 </button>
                                 <button
-                                    onClick={() => { createHotel(); setShowAddModal(false); }}
+                                    onClick={() => { createHotel(); fetchHotels(); setShowAddModal(false); }}
                                     className="px-4 py-2 !bg-blue-600 text-white rounded-lg !hover:bg-blue-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                 >
                                     Додати
@@ -196,3 +232,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
