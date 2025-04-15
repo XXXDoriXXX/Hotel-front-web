@@ -46,13 +46,16 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('token');
         setUser(null);
     };
+    const updateToken = (newToken) => {
+        localStorage.setItem('token', newToken);
+    };
 
     useEffect(() => {
         getMe();
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated, isLoading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated, isLoading, updateToken }}>
             {children}
         </AuthContext.Provider>
     );
