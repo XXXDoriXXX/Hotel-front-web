@@ -46,14 +46,11 @@ const ProfileEditPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // Перевірка на заповненість поточного пароля для обох вкладок
         if (!formData.current_password) {
             setError('Будь ласка, введіть поточний пароль для підтвердження');
             return;
         }
 
-        // Додаткова перевірка для вкладки зміни пароля
         if (activeTab === 'password') {
             if (!formData.new_password || !formData.confirm_password) {
                 setError('Будь ласка, заповніть всі поля для зміни пароля');
@@ -88,12 +85,10 @@ const ProfileEditPage = () => {
             if (response.data.owner) {
                 setSuccess(true);
 
-                // Оновлюємо токен, якщо він прийшов у відповіді
                 if (response.data.new_token) {
                     updateToken(response.data.new_token);
                 }
 
-                // Очищаємо всі поля паролів після успішної зміни
                 setFormData(prev => ({
                     ...prev,
                     current_password: '',
@@ -103,16 +98,14 @@ const ProfileEditPage = () => {
                     })
                 }));
 
-                // Якщо це була зміна пароля - оновлюємо дані користувача
                 if (activeTab === 'password') {
-                    await getMe(); // Функція з AuthContext для оновлення даних
+                    window.location.reload();
                 }
             }
         } catch (err) {
             if (err.response?.status === 400) {
                 if (err.response?.data?.detail === "Incorrect current password") {
                     setError('Невірний поточний пароль');
-                    // Очищаємо поле поточного пароля при помилці
                     setFormData(prev => ({
                         ...prev,
                         current_password: ''
