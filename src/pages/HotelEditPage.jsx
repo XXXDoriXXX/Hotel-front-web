@@ -38,12 +38,14 @@ const HotelEditPage = () => {
                 setAvailableAmenities(amenitiesRes.data);
 
                 const hotelRes = await api.get(`/hotels/${id}`);
-                setHotelData({
-                    ...hotelRes.data,
-                    amenities: hotelRes.data.amenities?.map(a => a.amenity_id) || [],
-                });
+                const hotel = hotelRes.data.hotel;
 
-                setImages(hotelRes.data.images || []);
+                setHotelData({
+                    ...hotel,
+                    amenities: hotel.amenities?.map(a => a.amenity_id) || [],
+                });
+                setImages(hotel.images || []);
+
             } catch (err) {
                 console.error('Error loading data:', err);
                 navigate('/dashboard');
