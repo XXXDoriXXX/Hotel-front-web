@@ -34,7 +34,10 @@ const HotelPage = () => {
                     api.get(`/amenities/hotel`)
                 ]);
 
-                const hotelData = hotelRes.data;
+                const hotelData = hotelRes.data.hotel;
+                const rating = hotelRes.data.rating;
+                const views = hotelRes.data.views;
+
                 const hotelAmenities = hotelData.amenities || [];
                 const allAmenities = amenitiesRes.data;
 
