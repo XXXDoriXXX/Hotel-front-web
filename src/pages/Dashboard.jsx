@@ -28,7 +28,7 @@ const Dashboard = () => {
 
     const fetchRooms = async (hotelId) => {
         try {
-            const response = await api.get(`/rooms?hotel_id=${hotelId}`);
+            const response = await api.get(`/rooms/?hotel_id=${hotelId}`);
             setHotelRooms((prev) => ({ ...prev, [hotelId]: response.data.length }));
         } catch (error) {
             console.error(`Failed to fetch rooms for hotel ${hotelId}:`, error);

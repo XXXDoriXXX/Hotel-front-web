@@ -88,7 +88,7 @@ const RoomEditPage = () => {
 
     const deleteImage = async (imageId) => {
         try {
-            await api.delete(`/rooms/images/${imageId}`);
+            await api.delete(`/rooms/images/${imageId}/`);
             setImages(prev => prev.filter(img => img.id !== imageId));
         } catch (err) {
             console.error('Помилка видалення:', err);
@@ -114,7 +114,7 @@ const RoomEditPage = () => {
             if (roomId) {
                 await api.put(`/rooms/${roomId}`, payload);
             } else {
-                const res = await api.post('/rooms', payload);
+                const res = await api.post('/rooms/', payload);
                 setRoomData(prev => ({ ...prev, id: res.data.id }));
             }
 

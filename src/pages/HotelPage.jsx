@@ -29,7 +29,7 @@ const HotelPage = () => {
             try {
                 const [hotelRes, roomsRes, statsRes, amenitiesRes] = await Promise.all([
                     api.get(`/hotels/${id}`),
-                    api.get(`/rooms?hotel_id=${id}`),
+                    api.get(`/rooms/?hotel_id=${id}`),
                     api.get(`/hotels/${id}/stats`),
                     api.get(`/amenities/hotel`)
                 ]);
