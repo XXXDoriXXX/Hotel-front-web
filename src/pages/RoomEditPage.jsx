@@ -88,7 +88,7 @@ const RoomEditPage = () => {
 
     const deleteImage = async (imageId) => {
         try {
-            await api.delete(`/rooms/images/${imageId}/`);
+            await api.delete(`/rooms/images/${imageId}`);
             setImages(prev => prev.filter(img => img.id !== imageId));
         } catch (err) {
             console.error('Помилка видалення:', err);

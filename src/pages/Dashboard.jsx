@@ -37,7 +37,7 @@ const Dashboard = () => {
 
     const fetchHotelStats = async (hotelId) => {
         try {
-            const response = await api.get(`/hotels/${hotelId}/stats`);
+            const response = await api.get(`/hotels/${hotelId}/stats/full`);
             setHotelStats((prev) => ({ ...prev, [hotelId]: response.data }));
         } catch (error) {
             console.error(`Failed to fetch stats for hotel ${hotelId}:`, error);

@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MapPicker from "../components/MapPicker.jsx";
+import InfiniteScroll from 'react-infinite-scroll-component';
+import { HotelStatsChart } from '../components/HotelStatsChart.jsx';
+import { GeneralStats } from "../components/stats/GeneralStats.jsx";
+import { FinancialOverview } from "../components/stats/FinancialOverview.jsx";
+import { DynamicCharts } from "../components/stats/DynamicCharts.jsx";
+import { ClientStats } from "../components/stats/ClientStats.jsx";
+import { EngagementStats } from "../components/stats/EngagementStats.jsx";
+import { FaCheck, FaTimes } from 'react-icons/fa';
+import dayjs from 'dayjs';
+
+
 import { api } from '../api/api';
 import {
     FaArrowLeft,
@@ -11,8 +22,12 @@ import {
     FaChartLine,
     FaMoneyBillWave,
     FaClipboardList,
-    FaTrash
+    FaTrash,
+    FaEye,
+    FaHeart,
+    FaRegSmileBeam
 } from 'react-icons/fa';
+
 import { motion } from 'framer-motion';
 import LoadingSpinner from "../components/LoadingSpinner.jsx";
 
@@ -22,21 +37,21 @@ const HotelPage = () => {
     const [hotel, setHotel] = useState(null);
     const [rooms, setRooms] = useState([]);
     const [stats, setStats] = useState(null);
+    const [bookings, setBookings] = useState([]);
+    const [hasMoreBookings, setHasMoreBookings] = useState(true);
+    const [bookingsPage, setBookingsPage] = useState(0);
     const [activeTab, setActiveTab] = useState('overview');
-
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const [hotelRes, roomsRes, statsRes, amenitiesRes] = await Promise.all([
                     api.get(`/hotels/${id}`),
                     api.get(`/rooms/?hotel_id=${id}`),
-                    api.get(`/hotels/${id}/stats`),
+                    api.get(`/hotels/${id}/stats/full`),
                     api.get(`/amenities/hotel`)
                 ]);
 
                 const hotelData = hotelRes.data.hotel;
-                const rating = hotelRes.data.rating;
-                const views = hotelRes.data.views;
 
                 const hotelAmenities = hotelData.amenities || [];
                 const allAmenities = amenitiesRes.data;
@@ -48,6 +63,8 @@ const HotelPage = () => {
                 setHotel({ ...hotelData, amenities: filteredAmenities });
                 setRooms(roomsRes.data);
                 setStats(statsRes.data);
+                console.log('Stats:', statsRes.data);
+
             } catch (err) {
                 console.error('Error loading data:', err);
                 navigate('/dashboard');
@@ -56,6 +73,50 @@ const HotelPage = () => {
 
         fetchData();
     }, [id, navigate]);
+    const fetchMoreBookings = async () => {
+        try {
+            const res = await api.get(`/hotels/${id}/bookings?skip=${bookingsPage}&limit=25`);
+            const newBookings = res.data;
+
+            if (newBookings.length < 25) setHasMoreBookings(false);
+            setBookings(prev => [...prev, ...newBookings]);
+            setBookingsPage(prev => prev + 25);
+        } catch (err) {
+            console.error('Error loading bookings:', err);
+            setHasMoreBookings(false);
+        }
+    };
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'confirmed': return 'text-green-600 bg-green-100';
+            case 'cancelled': return 'text-red-600 bg-red-100';
+            case 'awaiting_confirmation': return 'text-yellow-700 bg-yellow-100';
+            default: return 'text-gray-600 bg-gray-100';
+        }
+    };
+
+    const confirmCash = async (bookingId) => {
+        try {
+            await api.post(`/bookings/${bookingId}/confirm-cash`);
+            setBookings(prev =>
+                prev.map(b => b.booking_id === bookingId ? { ...b, status: 'confirmed' } : b)
+            );
+        } catch (err) {
+            console.error("Помилка підтвердження:", err);
+        }
+    };
+
+    const cancelCash = async (bookingId) => {
+        try {
+            await api.post(`/bookings/${bookingId}/cancel-cash`);
+            setBookings(prev =>
+                prev.map(b => b.booking_id === bookingId ? { ...b, status: 'cancelled' } : b)
+            );
+        } catch (err) {
+            console.error("Помилка відхилення:", err);
+        }
+    };
+
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
@@ -96,8 +157,15 @@ const HotelPage = () => {
             console.error('Помилка видалення:', err);
         }
     };
+    useEffect(() => {
+        if (activeTab === 'bookings' && bookings.length === 0) {
+            fetchMoreBookings();
+        }
+    }, [activeTab]);
 
-    if (!hotel || !stats) return <LoadingSpinner />;
+    if (!hotel || !stats || !stats.general) return <LoadingSpinner />;
+
+    const { general, financials, dynamics, clients, engagement } = stats;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -135,9 +203,8 @@ const HotelPage = () => {
             </header>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-
                 <div className="flex border-b !border-gray-200 mb-6">
-                    {['overview', 'rooms', 'stats'].map((tab) => (
+                    {['overview', 'rooms', 'stats', 'bookings'].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -146,6 +213,7 @@ const HotelPage = () => {
                             {tab === 'overview' && 'Огляд'}
                             {tab === 'rooms' && 'Кімнати'}
                             {tab === 'stats' && 'Статистика'}
+                            {tab === 'bookings' && 'Бронювання'}
                         </button>
                     ))}
                 </div>
@@ -268,32 +336,89 @@ const HotelPage = () => {
                     )}
 
                     {activeTab === 'stats' && (
+                        <div className="space-y-10">
+                            <section>
+                                <h3 className="text-xl font-bold mb-4">📌 Загальна інформація</h3>
+                                <GeneralStats data={general} />
+                            </section>
+
+                            <section>
+                                <h3 className="text-xl font-bold mb-4">💰 Фінанси</h3>
+                                <FinancialOverview data={financials} />
+                            </section>
+
+                            <section>
+                                <h3 className="text-xl font-bold mb-4">📈 Динаміка</h3>
+                                <DynamicCharts data={dynamics} />
+                            </section>
+
+                            <section>
+                                <h3 className="text-xl font-bold mb-4">👤 Клієнти</h3>
+                                <ClientStats data={clients} />
+                            </section>
+
+                            <section>
+                                <h3 className="text-xl font-bold mb-4">🏨 Інтерактивність</h3>
+                                <EngagementStats data={engagement} />
+                            </section>
+                        </div>
+
+                    )}
+                    {activeTab === 'bookings' && (
                         <div>
-                            <h3 className="text-xl font-semibold mb-6">Статистика готелю</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <StatCard
-                                    icon={<FaBed className="text-2xl" />}
-                                    title="Кімнат"
-                                    value={stats.rooms}
-                                />
-                                <StatCard
-                                    icon={<FaChartLine className="text-2xl" />}
-                                    title="Завантаженість"
-                                    value={`${Math.round(stats.occupancy * 100)}%`}
-                                />
-                                <StatCard
-                                    icon={<FaClipboardList className="text-2xl" />}
-                                    title="Бронювань"
-                                    value={stats.bookings}
-                                />
-                                <StatCard
-                                    icon={<FaMoneyBillWave className="text-2xl" />}
-                                    title="Дохід"
-                                    value={`${stats.income} ₴`}
-                                />
-                            </div>
+                            <h3 className="text-xl font-semibold mb-4">Бронювання</h3>
+                            <InfiniteScroll
+                                dataLength={bookings.length}
+                                next={fetchMoreBookings}
+                                hasMore={hasMoreBookings}
+                                loader={<LoadingSpinner />}
+                                endMessage={<p className="text-gray-500 text-center mt-4">Усі бронювання завантажено.</p>}
+                            >
+                                <ul className="divide-y">
+                                    {bookings.map((b, idx ) => (
+                                        <li key={idx} className="py-4 space-y-2 border-b">
+                                            <p><strong>Кімната:</strong> #{b.room_number}</p>
+                                            <p><strong>Клієнт:</strong> {b.client_name}</p>
+                                            <p><strong>Email:</strong> {b.email}</p>
+                                            <p><strong>Телефон:</strong> {b.phone || 'Невідомо'}</p>
+                                            <p><strong>Тип оплати:</strong> {b.is_card ? 'Картка' : 'Готівка'}</p>
+                                            <p><strong>Сума:</strong> {b.amount} ₴</p>
+                                            <p>
+                                                <strong>Період:</strong>{' '}
+                                                {dayjs(b.period_start).format("DD.MM.YYYY")} – {dayjs(b.period_end).format("DD.MM.YYYY")}
+                                            </p>
+                                            <p>
+                                                <strong>Статус:</strong>{' '}
+                                                <span className={`inline-block px-2 py-1 rounded-full text-sm font-medium ${getStatusStyle(b.status)}`}>
+          {b.status}
+        </span>
+                                            </p>
+
+                                            {!b.is_card && b.status === 'awaiting_confirmation' && (
+                                                <div className="flex gap-2 mt-2">
+                                                    <button
+                                                        onClick={() => confirmCash(b.booking_id)}
+                                                        className="px-3 py-1 rounded bg-green-600 text-white flex items-center gap-1 hover:bg-green-700"
+                                                    >
+                                                        <FaCheck /> Підтвердити
+                                                    </button>
+                                                    <button
+                                                        onClick={() => cancelCash(b.booking_id)}
+                                                        className="px-3 py-1 rounded bg-red-600 text-white flex items-center gap-1 hover:bg-red-700"
+                                                    >
+                                                        <FaTimes /> Відхилити
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+
+
+                            </InfiniteScroll>
                         </div>
                     )}
+
                 </div>
             </div>
         </div>
