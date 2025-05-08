@@ -47,6 +47,19 @@ export const FinancialOverview = ({ data }) => {
                     </BarChart>
                 </ResponsiveContainer>
             </div>
+
+            <div className="md:col-span-2 bg-white p-4 rounded-lg shadow grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <StatItem label="Зарплатні витрати" value={`${data.salary_expenses} $`} />
+                <StatItem label="Чистий прибуток" value={`${data.net_income} $`} />
+                <StatItem label="Прибуток - зарплати" value={`${data.income_minus_salaries} $`} />
+            </div>
         </div>
     );
 };
+
+const StatItem = ({ label, value }) => (
+    <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+        <p className="text-sm text-gray-500 mb-1">{label}</p>
+        <p className="text-lg font-semibold text-gray-800">{value}</p>
+    </div>
+);

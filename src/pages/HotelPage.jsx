@@ -9,7 +9,9 @@ import { DynamicCharts } from "../components/stats/DynamicCharts.jsx";
 import { ClientStats } from "../components/stats/ClientStats.jsx";
 import { EngagementStats } from "../components/stats/EngagementStats.jsx";
 import { FaCheck, FaTimes } from 'react-icons/fa';
-import dayjs from 'dayjs';
+import EmployeesPage from './EmployeesPage';
+import RoomEditModal from "./RoomEditPage.jsx";
+import { motion } from 'framer-motion';
 
 
 import { api } from '../api/api';
@@ -28,8 +30,9 @@ import {
     FaRegSmileBeam
 } from 'react-icons/fa';
 
-import { motion } from 'framer-motion';
 import LoadingSpinner from "../components/LoadingSpinner.jsx";
+import BookingList from "../components/BookingList.jsx";
+import Modal from "../components/Modal.jsx";
 
 const HotelPage = () => {
     const { id } = useParams();
@@ -40,6 +43,9 @@ const HotelPage = () => {
     const [bookings, setBookings] = useState([]);
     const [hasMoreBookings, setHasMoreBookings] = useState(true);
     const [bookingsPage, setBookingsPage] = useState(0);
+    const [showRoomModal, setShowRoomModal] = useState(false);
+    const [editingRoomId, setEditingRoomId] = useState(null);
+    const [roomModalKey, setRoomModalKey] = useState(0);
     const [activeTab, setActiveTab] = useState('overview');
     useEffect(() => {
         const fetchData = async () => {
@@ -86,12 +92,13 @@ const HotelPage = () => {
             setHasMoreBookings(false);
         }
     };
-    const getStatusStyle = (status) => {
-        switch (status) {
-            case 'confirmed': return 'text-green-600 bg-green-100';
-            case 'cancelled': return 'text-red-600 bg-red-100';
-            case 'awaiting_confirmation': return 'text-yellow-700 bg-yellow-100';
-            default: return 'text-gray-600 bg-gray-100';
+
+    const fetchRooms = async () => {
+        try {
+            const roomsRes = await api.get(`/rooms/?hotel_id=${id}`);
+            setRooms(roomsRes.data);
+        } catch (err) {
+            console.error('Error fetching rooms:', err);
         }
     };
 
@@ -204,7 +211,7 @@ const HotelPage = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
                 <div className="flex border-b !border-gray-200 mb-6">
-                    {['overview', 'rooms', 'stats', 'bookings'].map((tab) => (
+                    {['overview', 'rooms', 'stats', 'bookings', 'employees'].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -214,6 +221,8 @@ const HotelPage = () => {
                             {tab === 'rooms' && 'Кімнати'}
                             {tab === 'stats' && 'Статистика'}
                             {tab === 'bookings' && 'Бронювання'}
+                            {tab === 'employees' && 'Працівники'}
+
                         </button>
                     ))}
                 </div>
@@ -290,12 +299,22 @@ const HotelPage = () => {
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-xl font-semibold">Кімнати готелю</h3>
                                 <button
-                                    onClick={() => navigate(`/hotels/${id}/rooms/new`)}
+                                    onClick={() => {
+                                        setRoomModalKey(prev => prev + 1);
+                                        setShowRoomModal(true);
+                                    }}
                                     className="!bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
                                 >
                                     <FaPlus /> Додати кімнату
                                 </button>
                             </div>
+
+                            {showRoomModal && (
+                                <Modal open={showRoomModal} onClose={() => setShowRoomModal(false)} title="Нова кімната">
+                                    <RoomEditModal hotelId={id} onClose={() => setShowRoomModal(false)} onSuccess={fetchRooms} />
+                                </Modal>
+                            )}
+
 
                             {rooms.length === 0 ? (
                                 <p className="text-gray-500">Немає доступних кімнат</p>
@@ -316,11 +335,16 @@ const HotelPage = () => {
 
                                             <div className="flex justify-end gap-2 mt-4">
                                                 <button
-                                                    onClick={() => navigate(`/hotels/${id}/rooms/${room.id}`)}
+                                                    onClick={() => {
+                                                        setEditingRoomId(room.id);
+                                                        setShowRoomModal(true);
+                                                    }}
                                                     className="!bg-white text-blue-600 hover:text-blue-800"
                                                 >
                                                     <FaEdit />
                                                 </button>
+
+
                                                 <button
                                                     onClick={() => deleteRoom(room.id)}
                                                     className="!bg-white text-red-600 hover:text-red-800"
@@ -330,6 +354,30 @@ const HotelPage = () => {
                                             </div>
                                         </div>
                                     ))}
+                                    {showRoomModal && (
+                                        <Modal
+                                            open={showRoomModal}
+                                            onClose={() => {
+                                                setShowRoomModal(false);
+                                                setEditingRoomId(null);
+                                            }}
+                                            title={editingRoomId ? 'Редагування кімнати' : 'Нова кімната'}
+                                        >
+                                            <RoomEditModal
+                                                hotelId={id}
+                                                roomId={editingRoomId}
+                                                onClose={() => {
+                                                    setShowRoomModal(false);
+                                                    setEditingRoomId(null);
+                                                }}
+                                                onSuccess={() => {
+                                                    fetchRooms();
+                                                    setShowRoomModal(false);
+                                                    setEditingRoomId(null);
+                                                }}
+                                            />
+                                        </Modal>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -364,59 +412,16 @@ const HotelPage = () => {
                         </div>
 
                     )}
+                    {activeTab === 'employees' && <EmployeesPage hotelId={id} />}
+
                     {activeTab === 'bookings' && (
-                        <div>
-                            <h3 className="text-xl font-semibold mb-4">Бронювання</h3>
-                            <InfiniteScroll
-                                dataLength={bookings.length}
-                                next={fetchMoreBookings}
-                                hasMore={hasMoreBookings}
-                                loader={<LoadingSpinner />}
-                                endMessage={<p className="text-gray-500 text-center mt-4">Усі бронювання завантажено.</p>}
-                            >
-                                <ul className="divide-y">
-                                    {bookings.map((b, idx ) => (
-                                        <li key={idx} className="py-4 space-y-2 border-b">
-                                            <p><strong>Кімната:</strong> #{b.room_number}</p>
-                                            <p><strong>Клієнт:</strong> {b.client_name}</p>
-                                            <p><strong>Email:</strong> {b.email}</p>
-                                            <p><strong>Телефон:</strong> {b.phone || 'Невідомо'}</p>
-                                            <p><strong>Тип оплати:</strong> {b.is_card ? 'Картка' : 'Готівка'}</p>
-                                            <p><strong>Сума:</strong> {b.amount} ₴</p>
-                                            <p>
-                                                <strong>Період:</strong>{' '}
-                                                {dayjs(b.period_start).format("DD.MM.YYYY")} – {dayjs(b.period_end).format("DD.MM.YYYY")}
-                                            </p>
-                                            <p>
-                                                <strong>Статус:</strong>{' '}
-                                                <span className={`inline-block px-2 py-1 rounded-full text-sm font-medium ${getStatusStyle(b.status)}`}>
-          {b.status}
-        </span>
-                                            </p>
-
-                                            {!b.is_card && b.status === 'awaiting_confirmation' && (
-                                                <div className="flex gap-2 mt-2">
-                                                    <button
-                                                        onClick={() => confirmCash(b.booking_id)}
-                                                        className="px-3 py-1 rounded bg-green-600 text-white flex items-center gap-1 hover:bg-green-700"
-                                                    >
-                                                        <FaCheck /> Підтвердити
-                                                    </button>
-                                                    <button
-                                                        onClick={() => cancelCash(b.booking_id)}
-                                                        className="px-3 py-1 rounded bg-red-600 text-white flex items-center gap-1 hover:bg-red-700"
-                                                    >
-                                                        <FaTimes /> Відхилити
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </li>
-                                    ))}
-                                </ul>
-
-
-                            </InfiniteScroll>
-                        </div>
+                        <BookingList
+                            bookings={bookings}
+                            fetchMore={fetchMoreBookings}
+                            hasMore={hasMoreBookings}
+                            confirmCash={confirmCash}
+                            cancelCash={cancelCash}
+                        />
                     )}
 
                 </div>

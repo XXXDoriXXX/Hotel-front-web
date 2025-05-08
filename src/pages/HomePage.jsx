@@ -12,7 +12,6 @@ const HomePage = () => {
 
     return (
         <div className="min-h-screen bg-white text-gray-800">
-            {/* Navbar */}
             <header className="flex justify-between items-center px-6 py-4 bg-white shadow-md fixed w-full z-50">
                 <Link to="/" className="text-2xl font-bold text-blue-600">HotelHub</Link>
                 <nav className="flex gap-4 items-center">
@@ -31,7 +30,6 @@ const HomePage = () => {
                 </nav>
             </header>
 
-            {/* Hero */}
             <section className="pt-32 pb-20 px-6 bg-gradient-to-r from-blue-100 to-blue-300">
                 <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
                     <motion.div
@@ -69,7 +67,7 @@ const HomePage = () => {
                         className="relative"
                     >
                         <img
-                            src="https://th.bing.com/th/id/R.f22daf2f2ad6826e4488748bc80f3f6a?rik=yYnLaprpCDZBYw&pid=ImgRaw&r=0"
+                            src="https://hotelimmagesolution.s3.eu-north-1.amazonaws.com/HOTEL/Dashboard.png"
                             alt="Hotel preview"
                             className="rounded-2xl shadow-xl"
                         />
@@ -77,8 +75,6 @@ const HomePage = () => {
                 </div>
             </section>
 
-
-{/* Carousel */}
             <section className="max-w-5xl mx-auto py-14 px-4">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -88,22 +84,21 @@ const HomePage = () => {
                 >
                     <Carousel autoPlay infiniteLoop showThumbs={false} showStatus={false}>
                         <div>
-                            <img src="https://th.bing.com/th/id/R.f22daf2f2ad6826e4488748bc80f3f6a?rik=yYnLaprpCDZBYw&pid=ImgRaw&r=0" alt="Лобі готелю" />
+                            <img src="https://hotelimmagesolution.s3.eu-north-1.amazonaws.com/HOTEL/HotelCreate.png" alt="Управління готелем" />
                             <p className="legend">Інтуїтивна панель управління</p>
                         </div>
                         <div>
-                            <img src="https://source.unsplash.com/800x400/?hotel,room" alt="Номер готелю" />
+                            <img src="https://hotelimmagesolution.s3.eu-north-1.amazonaws.com/HOTEL/HotelStatistic.png" alt="Перегляд статистики" />
                             <p className="legend">Гнучке налаштування номерів</p>
                         </div>
                         <div>
-                            <img src="https://source.unsplash.com/800x400/?hotel,booking" alt="Бронювання" />
+                            <img src="https://hotelimmagesolution.s3.eu-north-1.amazonaws.com/HOTEL/HotelBookings.png" alt="Список бронювать" />
                             <p className="legend">Бронювання без зайвих кроків</p>
                         </div>
                     </Carousel>
                 </motion.div>
             </section>
 
-            {/* Features */}
             <section className="py-16 bg-gray-100">
                 <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8">
                     {[
@@ -125,7 +120,6 @@ const HomePage = () => {
                 </div>
             </section>
 
-            {/* Call to action */}
             <section className="py-20 bg-blue-700 !text-white text-center">
                 <motion.h2
                     initial={{ opacity: 0, y: 20 }}
@@ -153,8 +147,6 @@ const HomePage = () => {
                     </Link>
                 )}
             </section>
-
-            {/* Footer */}
             <footer className="py-6 bg-gradient-to-r from-gray-900 to-gray-800 text-white text-center text-sm">
                 <p>&copy; {new Date().getFullYear()} HotelHub. Зроблено з ❤️ для готельєрів.</p>
             </footer>
