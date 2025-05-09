@@ -29,8 +29,7 @@ const EmployeeDetailsModal = ({ employee, onClose }) => {
 
                 <div className="space-y-2 text-sm text-gray-700">
                     <p><strong>Посада:</strong> {employee.position}</p>
-                    <p><strong>Зарплата:</strong> {employee.salary} ₴</p>
-                    <p><strong>Готель:</strong> {employee.hotel_name || '—'}</p>
+                    <p><strong>Зарплата:</strong> {employee.salary} $</p>
                 </div>
 
                 <div className="mt-6">

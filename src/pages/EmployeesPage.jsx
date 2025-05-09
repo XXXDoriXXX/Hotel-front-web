@@ -86,7 +86,6 @@ const EmployeesPage = ({ hotelId }) => {
                         <th className="px-4 py-3 text-left">Прізвище</th>
                         <th className="px-4 py-3 text-left">Посада</th>
                         <th className="px-4 py-3 text-left">Зарплата</th>
-                        <th className="px-4 py-3 text-left">Готель</th>
                         <th className="px-4 py-3 text-center">Дії</th>
                     </tr>
                     </thead>
@@ -96,8 +95,7 @@ const EmployeesPage = ({ hotelId }) => {
                             <td className="px-4 py-2 text-blue-600 cursor-pointer hover:underline" onClick={() => openDetails(emp)}>{emp.first_name}</td>
                             <td className="px-4 py-2 text-blue-600 cursor-pointer hover:underline" onClick={() => openDetails(emp)}>{emp.last_name}</td>
                             <td className="px-4 py-2">{emp.position}</td>
-                            <td className="px-4 py-2">{emp.salary} ₴</td>
-                            <td className="px-4 py-2">{emp.hotel_name || '—'}</td>
+                            <td className="px-4 py-2">{emp.salary} $</td>
                             <td className="px-4 py-2 text-center space-x-3">
                                 <button onClick={() => handleEdit(emp)} className="text-blue-600 hover:text-blue-800">
                                     <FaEdit />

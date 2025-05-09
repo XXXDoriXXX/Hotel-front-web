@@ -62,7 +62,8 @@ const EmployeeForm = ({ hotelId, initialData = null, onSuccess, onCancel }) => {
                             name="first_name"
                             value={formData.first_name}
                             onChange={handleChange}
-                            className="w-full border px-3 py-2 rounded-lg"
+                            className="w-full border border-gray-300 focus:ring focus:ring-blue-200 focus:outline-none px-3 py-2 rounded-lg transition"
+
                             required
                         />
                     </div>
@@ -74,7 +75,8 @@ const EmployeeForm = ({ hotelId, initialData = null, onSuccess, onCancel }) => {
                             name="last_name"
                             value={formData.last_name}
                             onChange={handleChange}
-                            className="w-full border px-3 py-2 rounded-lg"
+                            className="w-full border border-gray-300 focus:ring focus:ring-blue-200 focus:outline-none px-3 py-2 rounded-lg transition"
+
                             required
                         />
                     </div>
@@ -86,19 +88,21 @@ const EmployeeForm = ({ hotelId, initialData = null, onSuccess, onCancel }) => {
                             name="position"
                             value={formData.position}
                             onChange={handleChange}
-                            className="w-full border px-3 py-2 rounded-lg"
+                            className="w-full border border-gray-300 focus:ring focus:ring-blue-200 focus:outline-none px-3 py-2 rounded-lg transition"
+
                             required
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium mb-1">Зарплата (₴) *</label>
+                        <label className="block text-sm font-medium mb-1">Зарплата ($) *</label>
                         <input
                             type="number"
                             name="salary"
                             value={formData.salary}
                             onChange={handleChange}
-                            className="w-full border px-3 py-2 rounded-lg"
+                            className="w-full border border-gray-300 focus:ring focus:ring-blue-200 focus:outline-none px-3 py-2 rounded-lg transition"
+
                             min="0"
                             required
                         />

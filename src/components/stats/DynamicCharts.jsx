@@ -1,10 +1,42 @@
 import React from "react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import {
+    LineChart, Line,
+    BarChart, Bar,
+    XAxis, YAxis,
+    CartesianGrid, Tooltip,
+    ResponsiveContainer, PieChart, Pie, Cell, LabelList
+} from "recharts";
+
+const COLORS = ["#3b82f6", "#facc15", "#10b981"];
+
+const formatCurrency = (val) => `${val.toLocaleString()} $`;
+
+const paymentLabels = {
+    card: 'Картка',
+    cash: 'Готівка'
+};
+
+const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload?.length) {
+        return (
+            <div className="bg-white border shadow p-2 rounded text-sm">
+                <p className="font-semibold">{label}</p>
+                {payload.map((entry, idx) => (
+                    <p key={idx} className="text-blue-700">
+                        {entry.name || entry.dataKey}: {formatCurrency(entry.value)}
+                    </p>
+                ))}
+            </div>
+        );
+    }
+    return null;
+};
 
 export const DynamicCharts = ({ data }) => {
-    const COLORS = ["#3b82f6", "#facc15", "#10b981"];
-
-    const paymentData = Object.entries(data.payment_distribution).map(([type, value]) => ({ name: type, value }));
+    const paymentData = Object.entries(data.payment_distribution).map(([type, value]) => ({
+        name: paymentLabels[type] || type,
+        value
+    }));
 
     return (
         <div className="space-y-8">
@@ -12,9 +44,16 @@ export const DynamicCharts = ({ data }) => {
                 <LineChart data={data.daily_income}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={2} />
+                    <YAxis tickFormatter={formatCurrency} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Line
+                        type="monotone"
+                        dataKey="total"
+                        stroke="#3b82f6"
+                        strokeWidth={3}
+                        dot={{ r: 3 }}
+                        activeDot={{ r: 5 }}
+                    />
                 </LineChart>
             </ChartWrapper>
 
@@ -23,8 +62,10 @@ export const DynamicCharts = ({ data }) => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="week" />
                     <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#10b981" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="count" fill="#10b981">
+                        <LabelList dataKey="count" position="top" />
+                    </Bar>
                 </BarChart>
             </ChartWrapper>
 
@@ -32,19 +73,29 @@ export const DynamicCharts = ({ data }) => {
                 <BarChart data={data.room_type_popularity}>
                     <XAxis dataKey="type" />
                     <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#f59e0b" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="count" fill="#f59e0b">
+                        <LabelList dataKey="count" position="top" />
+                    </Bar>
                 </BarChart>
             </ChartWrapper>
 
             <ChartWrapper title="Розподіл оплат">
                 <PieChart>
-                    <Pie data={paymentData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
-                        {paymentData.map((entry, index) => (
-                            <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                    <Pie
+                        data={paymentData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={90}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                        {paymentData.map((entry, idx) => (
+                            <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
                         ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip content={<CustomTooltip />} />
                 </PieChart>
             </ChartWrapper>
         </div>
@@ -58,3 +109,4 @@ const ChartWrapper = ({ title, children }) => (
     </div>
 );
 
+export default DynamicCharts;
