@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../api/api';
 import { FaPlus, FaTrash } from 'react-icons/fa';
+import { ImSpinner2 } from 'react-icons/im';
 
 const RoomEditModal = ({ hotelId, roomId = null, onClose, onSuccess }) => {
     const [roomData, setRoomData] = useState({
@@ -16,7 +17,9 @@ const RoomEditModal = ({ hotelId, roomId = null, onClose, onSuccess }) => {
     const [availableAmenities, setAvailableAmenities] = useState([]);
     const [errors, setErrors] = useState({});
     const [isUploading, setIsUploading] = useState(false);
+    const [deletingImageId, setDeletingImageId] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const inputRef = useRef();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -59,10 +62,7 @@ const RoomEditModal = ({ hotelId, roomId = null, onClose, onSuccess }) => {
         });
     };
 
-    const handleImageUpload = async (e) => {
-        const files = Array.from(e.target.files);
-        if (!files.length) return;
-
+    const handleFiles = async (files) => {
         setIsUploading(true);
         try {
             for (const file of files) {
@@ -80,12 +80,26 @@ const RoomEditModal = ({ hotelId, roomId = null, onClose, onSuccess }) => {
         }
     };
 
+    const handleImageUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length) await handleFiles(files);
+    };
+
+    const handleDrop = async (e) => {
+        e.preventDefault();
+        const files = Array.from(e.dataTransfer.files);
+        if (files.length) await handleFiles(files);
+    };
+
     const deleteImage = async (imageId) => {
+        setDeletingImageId(imageId);
         try {
             await api.delete(`/rooms/images/${imageId}`);
             setImages(prev => prev.filter(img => img.id !== imageId));
         } catch (err) {
             console.error('Delete error:', err);
+        } finally {
+            setDeletingImageId(null);
         }
     };
 
@@ -193,16 +207,28 @@ const RoomEditModal = ({ hotelId, roomId = null, onClose, onSuccess }) => {
                 </div>
             </div>
 
-            {roomId && (
+            {roomData.id && (
                 <div>
                     <label className="text-sm font-medium">Зображення</label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                        {images.map(img => (
+                        {images.map((img) => (
                             <div key={img.id} className="relative group">
-                                <img src={img.image_url} className="w-full h-28 object-cover rounded-lg" />
+                                <img
+                                    src={img.image_url}
+                                    alt="Room"
+                                    className={`w-full h-28 object-cover rounded-lg transition-opacity duration-300 ${
+                                        deletingImageId === img.id ? 'opacity-30' : 'opacity-100'
+                                    }`}
+                                />
+                                {deletingImageId === img.id && (
+                                    <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-lg z-10">
+                                        <ImSpinner2 className="animate-spin text-xl text-red-600" />
+                                    </div>
+                                )}
                                 <button
                                     onClick={() => deleteImage(img.id)}
-                                    className="absolute top-2 right-2 text-white bg-red-600 p-1 rounded-full text-xs"
+                                    disabled={deletingImageId === img.id}
+                                    className="absolute top-2 right-2 text-white bg-red-600 p-1 rounded-full text-xs z-20"
                                     type="button"
                                 >
                                     <FaTrash />
@@ -210,11 +236,28 @@ const RoomEditModal = ({ hotelId, roomId = null, onClose, onSuccess }) => {
                             </div>
                         ))}
                     </div>
-                    <label className="inline-block bg-blue-100 text-blue-700 px-4 py-2 rounded-lg cursor-pointer">
-                        <FaPlus className="inline mr-1" />
-                        Додати зображення
-                        <input type="file" multiple className="hidden" onChange={handleImageUpload} />
-                    </label>
+
+                    <div
+                        onDrop={handleDrop}
+                        onDragOver={(e) => e.preventDefault()}
+                        onClick={() => !isUploading && inputRef.current.click()}
+                        className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                            isUploading ? 'bg-gray-100 text-gray-400' : 'hover:bg-blue-50 border-blue-300 text-blue-600'
+                        }`}
+                    >
+                        <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            ref={inputRef}
+                            onChange={handleImageUpload}
+                            className="hidden"
+                            disabled={isUploading}
+                        />
+                        <p className="text-sm">
+                            {isUploading ? 'Завантаження...' : ' Перетягніть або натисніть для вибору зображень'}
+                        </p>
+                    </div>
                 </div>
             )}
 
@@ -222,8 +265,12 @@ const RoomEditModal = ({ hotelId, roomId = null, onClose, onSuccess }) => {
                 <button type="button" onClick={onClose} className="px-4 py-2 border rounded-lg">
                     Скасувати
                 </button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                    Зберегти
+                <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+                    disabled={isLoading}
+                >
+                    {isLoading ? 'Збереження...' : 'Зберегти'}
                 </button>
             </div>
         </form>

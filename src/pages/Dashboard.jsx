@@ -21,7 +21,23 @@ const Dashboard = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [hotelRooms, setHotelRooms] = useState({});
     const [hotelStats, setHotelStats] = useState({});
+    const [summary, setSummary] = useState({ bookings: 0, income: 0 });
 
+    useEffect(() => {
+        const fetchSummary = async () => {
+            try {
+                const res = await api.get('/hotels/my/summary');
+                setSummary({
+                    bookings: res.data.total_bookings ?? 0,
+                    income: res.data.total_income ?? 0,
+                });
+
+            } catch (err) {
+                console.error('Помилка при завантаженні summary:', err);
+            }
+        };
+        fetchSummary();
+    }, []);
     useEffect(() => {
         fetchHotels();
     }, []);
@@ -58,9 +74,10 @@ const Dashboard = () => {
     const stats = [
         { label: 'Готелів', value: hotels.length, icon: <FaHotel className="text-3xl text-blue-600" /> },
         { label: 'Номерів', value: calculateRoomCount(), icon: <FaBed className="text-3xl text-green-600" /> },
-        { label: 'Бронювань', value: 15, icon: <FaClipboardList className="text-3xl text-yellow-600" /> },
-        { label: 'Дохід', value: '₴12890', icon: <FaMoneyBillWave className="text-3xl text-indigo-600" /> },
+        { label: 'Бронювань', value: summary.bookings ?? 0, icon: <FaClipboardList className="text-3xl text-yellow-600" /> },
+        { label: 'Дохід', value: `$${Number(summary.income ?? 0).toLocaleString()}`, icon: <FaMoneyBillWave className="text-3xl text-indigo-600" /> },
     ];
+
 
     return (
         <div className="min-h-screen !bg-gray-100 pb-10">
@@ -189,18 +206,6 @@ const Dashboard = () => {
                                     longitude: pos.lng,
                                 }));
                             }} />
-
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                    const file = e.target.files[0];
-                                    if (!file) return;
-                                    setNewHotel((prev) => ({ ...prev, imageFile: file }));
-                                }}
-                                className={`mt-3 block w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
-                            />
-
                             <textarea
                                 placeholder="Опис"
                                 value={newHotel.description}

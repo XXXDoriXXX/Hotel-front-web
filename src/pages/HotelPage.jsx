@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MapPicker from "../components/MapPicker.jsx";
 import InfiniteScroll from 'react-infinite-scroll-component';
@@ -12,6 +12,7 @@ import { FaCheck, FaTimes } from 'react-icons/fa';
 import EmployeesPage from './EmployeesPage';
 import RoomEditModal from "./RoomEditPage.jsx";
 import { motion } from 'framer-motion';
+import { ImSpinner2 } from 'react-icons/im';
 
 
 import { api } from '../api/api';
@@ -47,6 +48,10 @@ const HotelPage = () => {
     const [editingRoomId, setEditingRoomId] = useState(null);
     const [roomModalKey, setRoomModalKey] = useState(0);
     const [activeTab, setActiveTab] = useState('overview');
+    const [isUploading, setIsUploading] = useState(false);
+    const [deletingImageId, setDeletingImageId] = useState(null);
+    const inputRef = useRef();
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -126,35 +131,42 @@ const HotelPage = () => {
 
 
     const handleImageUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+        setIsUploading(true);
         try {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            await api.post(`/hotels/${id}/images`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append('file', file);
+                await api.post(`/hotels/${id}/images`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+            }
 
             const res = await api.get(`/hotels/${id}`);
-            setHotel(res.data);
+            setHotel(prev => ({ ...prev, images: res.data.hotel.images }));
         } catch (err) {
-            console.error('Помилка завантаження:', err);
+            console.error('Помилка завантаження зображень:', err);
+        } finally {
+            setIsUploading(false);
         }
     };
 
     const deleteImage = async (imageId) => {
+        setDeletingImageId(imageId);
         try {
             await api.delete(`/hotels/images/${imageId}`);
             setHotel(prev => ({
                 ...prev,
-                images: prev.images.filter(img => img.id !== imageId)
+                images: prev.images.filter(img => img.id !== imageId),
             }));
         } catch (err) {
             console.error('Помилка видалення:', err);
+        } finally {
+            setDeletingImageId(null);
         }
     };
+
 
     const deleteRoom = async (roomId) => {
         try {
@@ -274,24 +286,63 @@ const HotelPage = () => {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                                 {hotel.images?.map((img) => (
                                     <div key={img.id} className="relative group">
-                                        <img src={img.image_url} alt="Hotel" className="w-full h-48 object-cover rounded-lg" />
+                                        <img
+                                            src={img.image_url}
+                                            alt="Hotel"
+                                            loading="lazy"
+                                            className="w-full h-48 object-cover rounded-lg"
+                                        />
+
+                                        {deletingImageId === img.id && (
+                                            <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-lg z-10">
+                                                <ImSpinner2 className="animate-spin text-xl text-red-600" />
+                                            </div>
+                                        )}
+
                                         <button
                                             onClick={() => deleteImage(img.id)}
-                                            className="absolute top-2 right-2 !bg-red-700 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                                            disabled={deletingImageId === img.id}
+                                            className="absolute top-2 right-2 !bg-red-700 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition z-20"
                                         >
-                                            <FaTrash />
+                                            <FaTrash className="text-xs" />
                                         </button>
                                     </div>
+
+
                                 ))}
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <label className="!bg-blue-100 text-blue-700 px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-200 transition">
-                                    <FaPlus className="inline mr-2" />
+                            <div className="w-full bg-blue-100 rounded-lg p-4 space-y-4">
+                                <div className="text-blue-700 font-semibold flex items-center gap-2">
+                                    <FaPlus className="text-sm" />
                                     Додати фото
-                                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                                </label>
+                                </div>
+
+                                <div
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+                                        handleImageUpload({ target: { files: e.dataTransfer.files } });
+                                    }}
+                                    onDragOver={(e) => e.preventDefault()}
+                                    onClick={() => !isUploading && inputRef.current.click()}
+                                    className={`w-full border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                                        isUploading ? 'bg-gray-100 text-gray-400' : 'hover:bg-blue-50 border-blue-300 text-blue-600'
+                                    }`}
+                                >
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        ref={inputRef}
+                                        className="hidden"
+                                        onChange={handleImageUpload}
+                                        disabled={isUploading}
+                                    />
+                                    <p className="text-sm">
+                                        {isUploading ? 'Завантаження...' : 'Перетягніть або натисніть для вибору зображення'}
+                                    </p>
+                                </div>
                             </div>
+
                         </motion.div>
                     )}
                     {activeTab === 'rooms' && (
