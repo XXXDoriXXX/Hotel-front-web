@@ -1,15 +1,41 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUserEdit, FaSignOutAlt, FaClipboardList, FaPhone, FaEnvelope, FaCrown } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import {api} from "../api/api.js";
 
 const ProfilePage = () => {
     const navigate = useNavigate();
     const { user, logout, isLoading } = useAuth();
+    const [stripeConnected, setStripeConnected] = useState(true);
 
     const handleLogout = () => {
         logout();
         navigate('/login');
+    };
+    useEffect(() => {
+        const fetchStripeStatus = async () => {
+            try {
+                const res = await api.get("/payments/status");
+                setStripeConnected(res.data.connected);
+            } catch (err) {
+                console.error("Stripe status error", err);
+                setStripeConnected(false);
+            }
+        };
+
+        fetchStripeStatus();
+    }, []);
+    const handleStripeConnect = async () => {
+        try {
+            const res = await api.post("/payments/connect");
+            if (res.data?.url) {
+                window.open(res.data.url, "_blank");
+            }
+        } catch (err) {
+            console.error("Stripe connect error", err);
+            alert("Не вдалося створити підключення до Stripe");
+        }
     };
 
     const getInitials = (firstName, lastName) => {
@@ -44,7 +70,19 @@ const ProfilePage = () => {
                             </div>
                         </div>
                     </div>
-
+                    {user.user?.is_owner && !stripeConnected && (
+                        <div className="bg-red-100 border border-red-300 text-red-700 p-4 rounded-lg space-y-2 mt-4 mr-4 ml-4">
+                            <p className="font-medium">
+                                Ваш готель <strong>не може приймати оплату карткою</strong>, поки не підключено Stripe.
+                            </p>
+                            <button
+                                onClick={handleStripeConnect}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                            >
+                                Підключити Stripe акаунт
+                            </button>
+                        </div>
+                    )}
                     {/* Profile Details */}
                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="bg-gray-50 p-4 rounded-lg">
@@ -83,6 +121,7 @@ const ProfilePage = () => {
                             </div>
                         </div>
                     </div>
+
 
                     {/* Actions */}
                     <div className="px-6 pb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">

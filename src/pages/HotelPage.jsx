@@ -13,6 +13,7 @@ import EmployeesPage from './EmployeesPage';
 import RoomEditModal from "./RoomEditPage.jsx";
 import { motion } from 'framer-motion';
 import { ImSpinner2 } from 'react-icons/im';
+import { useNotification } from "../components/NotificationContext";
 
 
 import { api } from '../api/api';
@@ -47,10 +48,15 @@ const HotelPage = () => {
     const [showRoomModal, setShowRoomModal] = useState(false);
     const [editingRoomId, setEditingRoomId] = useState(null);
     const [roomModalKey, setRoomModalKey] = useState(0);
+    const { addNotification } = useNotification();
     const [activeTab, setActiveTab] = useState('overview');
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [deletingImageId, setDeletingImageId] = useState(null);
     const inputRef = useRef();
+    const [refundBooking, setRefundBooking] = useState(null);
+    const [refundAmount, setRefundAmount] = useState('');
+    const [isRefunding, setIsRefunding] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -84,19 +90,60 @@ const HotelPage = () => {
 
         fetchData();
     }, [id, navigate]);
-    const fetchMoreBookings = async () => {
+    const fetchMoreBookings = async (overrideSkip = null) => {
         try {
-            const res = await api.get(`/hotels/${id}/bookings?skip=${bookingsPage}&limit=25`);
+            const skip = overrideSkip !== null ? overrideSkip : bookingsPage;
+            const res = await api.get(`/hotels/${id}/bookings?skip=${skip}&limit=25`);
             const newBookings = res.data;
 
             if (newBookings.length < 25) setHasMoreBookings(false);
             setBookings(prev => [...prev, ...newBookings]);
-            setBookingsPage(prev => prev + 25);
+            setBookingsPage(prev => skip + 25);
         } catch (err) {
             console.error('Error loading bookings:', err);
             setHasMoreBookings(false);
         }
     };
+
+    const handleRefresh = async () => {
+        if (isRefreshing) return;
+        setIsRefreshing(true);
+
+        setBookings([]);
+        setBookingsPage(0);
+        setHasMoreBookings(true);
+
+        try {
+            const [hotelRes, roomsRes, statsRes, amenitiesRes] = await Promise.all([
+                api.get(`/hotels/${id}`),
+                api.get(`/rooms/?hotel_id=${id}`),
+                api.get(`/hotels/${id}/stats/full`),
+                api.get(`/amenities/hotel`)
+            ]);
+
+            const hotelData = hotelRes.data.hotel;
+            const hotelAmenities = hotelData.amenities || [];
+            const allAmenities = amenitiesRes.data;
+
+            const filteredAmenities = allAmenities.filter((a) =>
+                hotelAmenities.some((ha) => ha.amenity_id === a.id)
+            );
+
+            setHotel({ ...hotelData, amenities: filteredAmenities });
+            setRooms(roomsRes.data);
+            setStats(statsRes.data);
+            await fetchMoreBookings(0);
+
+            addNotification('success', 'Дані оновлено');
+        } catch (err) {
+            console.error('Помилка оновлення:', err);
+            addNotification('error', 'Не вдалося оновити дані');
+        } finally {
+            setTimeout(() => setIsRefreshing(false), 3000);
+        }
+    };
+
+
 
     const fetchRooms = async () => {
         try {
@@ -126,6 +173,30 @@ const HotelPage = () => {
             );
         } catch (err) {
             console.error("Помилка відхилення:", err);
+        }
+    };
+    const handleManualRefund = async () => {
+        const amount = parseFloat(refundAmount);
+        if (!amount || amount <= 0 || amount > refundBooking.amount) {
+            addNotification('error', 'Сума недійсна або перевищує суму бронювання');
+            return;
+        }
+
+        setIsRefunding(true);
+        try {
+            await api.post(`/bookings/${refundBooking.booking_id}/refund-manual`, { amount });
+            addNotification('success', `Повернено ${amount} $ клієнту`);
+            setRefundBooking(null);
+            setRefundAmount('');
+            setBookings([]);
+            setBookingsPage(0);
+            setHasMoreBookings(true);
+            await fetchMoreBookings(0);
+        } catch (err) {
+            console.error('Помилка повернення:', err);
+            addNotification('error', 'Не вдалося виконати повернення');
+        } finally {
+            setIsRefunding(false);
         }
     };
 
@@ -220,7 +291,16 @@ const HotelPage = () => {
                     </button>
                 </div>
             </header>
+
+
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <button
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    className="ml-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition mb-8 disabled:opacity-50"
+                >
+                    {isRefreshing ? 'Оновлення...' : '🔄 Оновити дані'}
+                </button>
 
                 <div className="flex border-b !border-gray-200 mb-6">
                     {['overview', 'rooms', 'stats', 'bookings', 'employees'].map((tab) => (
@@ -379,7 +459,7 @@ const HotelPage = () => {
                                             <div className="flex justify-between">
                                                 <h4 className="font-bold">{room.room_number}</h4>
                                                 <span className="!bg-blue-100 !text-blue-800 px-2 py-1 rounded text-sm">
-                                                    {room.price_per_night} ₴/ніч
+                                                    {room.price_per_night} $/ніч
                                                 </span>
                                             </div>
                                             <p className="text-gray-600 text-sm mt-2">{room.description}</p>
@@ -472,8 +552,36 @@ const HotelPage = () => {
                             hasMore={hasMoreBookings}
                             confirmCash={confirmCash}
                             cancelCash={cancelCash}
+                            onRefund={(booking) => setRefundBooking(booking)}
                         />
+
                     )}
+                    <Modal open={!!refundBooking} onClose={() => { setRefundBooking(null); setRefundAmount(''); }} title="Повернення коштів">
+                        <p className="text-sm text-gray-700 mb-2">
+                            Повернення для <strong>{refundBooking?.client_name}</strong> на суму до <strong>{refundBooking?.amount} $</strong>.
+                        </p>
+                        <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={refundAmount}
+                            onChange={(e) => setRefundAmount(e.target.value)}
+                            className="w-full border border-gray-300 px-3 py-2 rounded-lg mb-4"
+                            placeholder="Введіть суму повернення"
+                        />
+                        <div className="flex justify-end gap-2">
+                            <button onClick={() => setRefundBooking(null)} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+                                Скасувати
+                            </button>
+                            <button
+                                onClick={handleManualRefund}
+                                disabled={isRefunding}
+                                className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:opacity-50"
+                            >
+                                {isRefunding ? 'Повернення...' : 'Підтвердити'}
+                            </button>
+                        </div>
+                    </Modal>
 
                 </div>
             </div>

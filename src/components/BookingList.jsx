@@ -3,6 +3,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import dayjs from "dayjs";
 
+
 const getStatusStyle = (status) => {
     switch (status) {
         case "confirmed": return "bg-green-100 text-green-700";
@@ -13,7 +14,7 @@ const getStatusStyle = (status) => {
     }
 };
 
-const BookingList = ({ bookings, fetchMore, hasMore, confirmCash, cancelCash }) => (
+const BookingList = ({ bookings, fetchMore, hasMore, confirmCash, cancelCash, onRefund }) => (
     <div>
         <h3 className="text-xl font-semibold mb-4">Бронювання</h3>
         <InfiniteScroll
@@ -31,7 +32,7 @@ const BookingList = ({ bookings, fetchMore, hasMore, confirmCash, cancelCash }) 
                         <p><strong>Email:</strong> {b.email}</p>
                         <p><strong>Телефон:</strong> {b.phone || 'Невідомо'}</p>
                         <p><strong>Тип оплати:</strong> {b.is_card ? 'Картка' : 'Готівка'}</p>
-                        <p><strong>Сума:</strong> {b.amount} ₴</p>
+                        <p><strong>Сума:</strong> {b.amount} $</p>
                         <p>
                             <strong>Період:</strong>{' '}
                             {dayjs(b.period_start).format("DD.MM.YYYY")} – {dayjs(b.period_end).format("DD.MM.YYYY")}
@@ -59,10 +60,20 @@ const BookingList = ({ bookings, fetchMore, hasMore, confirmCash, cancelCash }) 
                                 </button>
                             </div>
                         )}
+                        {b.status === 'confirmed' && b.is_card && (
+                            <button
+                                onClick={() => onRefund(b)}
+                                className="px-3 py-1 rounded bg-yellow-500 text-white hover:bg-yellow-600 mt-2"
+                            >
+                                Повернути гроші
+                            </button>
+                        )}
                     </li>
                 ))}
             </ul>
+
         </InfiniteScroll>
+
     </div>
 );
 

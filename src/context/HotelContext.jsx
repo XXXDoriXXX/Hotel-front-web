@@ -41,7 +41,7 @@ export const HotelProvider = ({ children }) => {
                 },
             };
 
-            const res = await api.post('/hotels', payload);
+            const res = await api.post('/hotels/', payload);
             const createdHotel = res.data;
 
             if (newHotel.imageFile) {
