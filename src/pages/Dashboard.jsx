@@ -9,11 +9,13 @@ import {
     FaMoneyBillWave,
     FaClipboardList,
     FaPlus,
-    FaUserCircle,
+    FaUserCircle, FaTrash,
 } from 'react-icons/fa';
 import MapPicker from "../components/MapPicker.jsx";
 import {GOOGLE_MAPS_API} from "../api/api.js";
 import {api} from '../api/api.js';
+import {useNotification} from "../components/NotificationContext.jsx";
+import Modal from "../components/Modal.jsx";
 
 const Dashboard = () => {
     const { hotels, newHotel, setNewHotel, createHotel, fetchHotels } = useHotel();
@@ -21,14 +23,45 @@ const Dashboard = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [hotelRooms, setHotelRooms] = useState({});
     const [hotelStats, setHotelStats] = useState({});
+    const [deleteConfirm, setDeleteConfirm] = useState(null);
+    const [deleteStep, setDeleteStep] = useState(0);
+    const { addNotification } = useNotification();
+    const [summary, setSummary] = useState({ bookings: 0, income: 0 });
 
+    useEffect(() => {
+        const fetchSummary = async () => {
+            try {
+                const res = await api.get('/hotels/my/summary');
+                setSummary({
+                    bookings: res.data.total_bookings ?? 0,
+                    income: res.data.total_income ?? 0,
+                });
+
+            } catch (err) {
+                console.error('Помилка при завантаженні summary:', err);
+            }
+        };
+        fetchSummary();
+    }, []);
     useEffect(() => {
         fetchHotels();
     }, []);
+    const handleHotelDelete = async (hotelId) => {
+        try {
+            await api.delete(`/hotels/${hotelId}`);
+            addNotification('success', 'Готель успішно видалено');
+            fetchHotels();
+            setDeleteConfirm(null);
+            setDeleteStep(0);
+        } catch (err) {
+            console.error('Помилка при видаленні готелю:', err);
+            addNotification('error', 'Не вдалося видалити готель');
+        }
+    };
 
     const fetchRooms = async (hotelId) => {
         try {
-            const response = await api.get(`/rooms?hotel_id=${hotelId}`);
+            const response = await api.get(`/rooms/?hotel_id=${hotelId}`);
             setHotelRooms((prev) => ({ ...prev, [hotelId]: response.data.length }));
         } catch (error) {
             console.error(`Failed to fetch rooms for hotel ${hotelId}:`, error);
@@ -37,7 +70,7 @@ const Dashboard = () => {
 
     const fetchHotelStats = async (hotelId) => {
         try {
-            const response = await api.get(`/hotels/${hotelId}/stats`);
+            const response = await api.get(`/hotels/${hotelId}/stats/full`);
             setHotelStats((prev) => ({ ...prev, [hotelId]: response.data }));
         } catch (error) {
             console.error(`Failed to fetch stats for hotel ${hotelId}:`, error);
@@ -58,9 +91,10 @@ const Dashboard = () => {
     const stats = [
         { label: 'Готелів', value: hotels.length, icon: <FaHotel className="text-3xl text-blue-600" /> },
         { label: 'Номерів', value: calculateRoomCount(), icon: <FaBed className="text-3xl text-green-600" /> },
-        { label: 'Бронювань', value: 15, icon: <FaClipboardList className="text-3xl text-yellow-600" /> },
-        { label: 'Дохід', value: '₴12890', icon: <FaMoneyBillWave className="text-3xl text-indigo-600" /> },
+        { label: 'Бронювань', value: summary.bookings ?? 0, icon: <FaClipboardList className="text-3xl text-yellow-600" /> },
+        { label: 'Дохід', value: `$${Number(summary.income ?? 0).toLocaleString()}`, icon: <FaMoneyBillWave className="text-3xl text-indigo-600" /> },
     ];
+
 
     return (
         <div className="min-h-screen !bg-gray-100 pb-10">
@@ -122,7 +156,19 @@ const Dashboard = () => {
                         >
                             <img src={hotel.images?.[0]?.image_url} className="rounded-t-xl h-64 w-full object-cover" />
                             <div className="p-4">
-                                <h4 className="text-lg font-bold text-blue-700">{hotel.name}</h4>
+                                <h4 className="text-lg font-bold text-blue-700 flex justify-between items-center">
+                                    {hotel.name}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setDeleteConfirm(hotel);
+                                            setDeleteStep(0);
+                                        }}
+                                        className="text-red-600 hover:text-red-800 text-sm ml-2"
+                                    >
+                                        <FaTrash />
+                                    </button>
+                                </h4>
                                 <p className="text-sm text-gray-500">
                                     {hotel.address?.street}, {hotel.address?.city}, {hotel.address?.country}
                                 </p>
@@ -134,9 +180,43 @@ const Dashboard = () => {
                         </motion.div>
                     ))}
                 </div>
-            </div>
 
-            <AnimatePresence>
+                <Modal
+                    open={!!deleteConfirm}
+                    onClose={() => { setDeleteConfirm(null); setDeleteStep(0); }}
+                    title="Підтвердження видалення готелю"
+                >
+                    <p className="mb-4 text-gray-700">
+                        Ви дійсно хочете видалити готель <strong>{deleteConfirm?.name}</strong>?<br />
+                        Це призведе до видалення всіх повʼязаних номерів, працівників, бронювань та зображень.
+                    </p>
+
+                    {deleteStep < 2 ? (
+                        <button
+                            onClick={() => setDeleteStep(deleteStep + 1)}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                        >
+                            {`Підтвердити (${deleteStep + 1}/3)`}
+                        </button>
+                    ) : (
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+                            >
+                                Скасувати
+                            </button>
+                            <button
+                                onClick={() => handleHotelDelete(deleteConfirm.id)}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                            >
+                                Видалити назавжди
+                            </button>
+                        </div>
+                    )}
+                </Modal>
+            </div>
+                <AnimatePresence>
                 {showAddModal && (
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -189,18 +269,6 @@ const Dashboard = () => {
                                     longitude: pos.lng,
                                 }));
                             }} />
-
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                    const file = e.target.files[0];
-                                    if (!file) return;
-                                    setNewHotel((prev) => ({ ...prev, imageFile: file }));
-                                }}
-                                className={`mt-3 block w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
-                            />
-
                             <textarea
                                 placeholder="Опис"
                                 value={newHotel.description}

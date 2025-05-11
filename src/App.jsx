@@ -9,7 +9,7 @@ import RoomEditPage from "./pages/RoomEditPage.jsx";
 import HotelEditPage from "./pages/HotelEditPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import ProfileEditPage from "./pages/ProfileEditPage.jsx";
-
+import { NotificationProvider } from './components/NotificationContext';
 function App() {
     return (
         <Routes>
