@@ -264,7 +264,7 @@ const HotelPage = () => {
                 <div className="flex items-center space-x-4">
                     <button
                         onClick={() => navigate('/dashboard')}
-                        className="!bg-white text-blue-600 hover:text-blue-800 p-2 rounded-full shadow-md transition-all"
+                        className="!bg-white text-blue-600 hover:text-blue-800 p-2 rounded-full shadow-md transition-all flex-wrap gap-2 justify-between"
                     >
                         <FaArrowLeft className="text-xl" />
                     </button>
@@ -279,13 +279,13 @@ const HotelPage = () => {
                 <div className="flex items-center gap-4 mt-4 sm:mt-0">
                     <button
                         onClick={() => navigate(`/hotels/${id}/edit`)}
-                        className="!bg-white !text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg flex items-center gap-2 shadow-md transition-all"
+                        className="!bg-white !text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-lg flex items-center gap-2 shadow-md transition-all flex-wrap gap-2 justify-between"
                     >
                         Edit
                     </button>
                     <button
                         onClick={() => navigate('/profile')}
-                        className="w-12 h-12 sm:w-16 sm:h-16 !rounded-full !bg-white text-blue-700 hover:text-blue-900 flex items-center justify-center shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-300"
+                        className="w-12 h-12 sm:w-16 sm:h-16 !rounded-full !bg-white text-blue-700 hover:text-blue-900 flex items-center justify-center shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-300 flex-wrap gap-2 justify-between"
                     >
                         <FaUserCircle className="text-2xl sm:text-3xl" />
                     </button>
@@ -302,19 +302,22 @@ const HotelPage = () => {
                     {isRefreshing ? 'Оновлення...' : '🔄 Оновити дані'}
                 </button>
 
-                <div className="flex border-b !border-gray-200 mb-6">
+                <div className="flex overflow-x-auto whitespace-nowrap border-b !border-gray-200 mb-6 scrollbar-hide">
                     {['overview', 'rooms', 'stats', 'bookings', 'employees'].map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`px-4 py-2 font-medium !bg-white ${activeTab === tab ? '!text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                            className={`px-4 py-2 font-medium shrink-0 transition-colors ${
+                                activeTab === tab
+                                    ? 'text-blue-600 border-b-2 border-blue-600'
+                                    : 'text-gray-500 hover:text-gray-700'
+                            }`}
                         >
                             {tab === 'overview' && 'Огляд'}
                             {tab === 'rooms' && 'Кімнати'}
                             {tab === 'stats' && 'Статистика'}
                             {tab === 'bookings' && 'Бронювання'}
                             {tab === 'employees' && 'Працівники'}
-
                         </button>
                     ))}
                 </div>
@@ -363,7 +366,7 @@ const HotelPage = () => {
                             </div>
 
                             <h3 className="text-lg font-semibold mb-4">Галерея</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div className="grid grid-cols-1 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                                 {hotel.images?.map((img) => (
                                     <div key={img.id} className="relative group">
                                         <img

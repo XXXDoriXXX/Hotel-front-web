@@ -210,7 +210,7 @@ const RoomEditModal = ({ hotelId, roomId = null, onClose, onSuccess }) => {
             {roomData.id && (
                 <div>
                     <label className="text-sm font-medium">Зображення</label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                    <div className="grid grid-cols-1 grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                         {images.map((img) => (
                             <div key={img.id} className="relative group">
                                 <img
