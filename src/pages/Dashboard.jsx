@@ -146,7 +146,7 @@ const Dashboard = () => {
                     ))}
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid-cols-1 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {hotels.map((hotel) => (
                         <motion.div
                             key={hotel.id}
@@ -154,7 +154,7 @@ const Dashboard = () => {
                             className="bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer relative"
                             onClick={() => navigate(`/hotels/${hotel.id}`)}
                         >
-                            <img src={hotel.images?.[0]?.image_url} className="rounded-t-xl h-64 w-full object-cover" />
+                            <img src={hotel.images?.[0]?.image_url} className="rounded-t-xl h-48 sm:h-64 w-full object-cover" />
                             <div className="p-4">
                                 <h4 className="text-lg font-bold text-blue-700 flex justify-between items-center">
                                     {hotel.name}
@@ -230,7 +230,7 @@ const Dashboard = () => {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
                             transition={{ type: 'spring', stiffness: 200 }}
-                            className="bg-white p-6 rounded-xl shadow-xl w-full max-w-lg"
+                            className="bg-white p-6 rounded-xl shadow-xl w-full w-full mx-2"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <h2 className="text-xl font-bold mb-4 text-blue-700">Новий готель</h2>

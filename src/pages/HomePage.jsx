@@ -37,7 +37,7 @@ const HomePage = () => {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6 }}
                     >
-                        <h1 className="text-5xl font-extrabold text-blue-800 mb-6 leading-tight">
+                        <h1 className="text-3xl sm:text-5xl font-extrabold text-blue-800 mb-6 leading-tight">
                             Платформа для керування готелем
                         </h1>
                         <p className="text-lg text-gray-700 mb-8">
@@ -80,7 +80,7 @@ const HomePage = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.6 }}
-                    className="overflow-hidden rounded-3xl shadow-xl"
+                    className="overflow-hidden rounded-3xl shadow-xl h-[200px] sm:h-[400px] object-cover"
                 >
                     <Carousel autoPlay infiniteLoop showThumbs={false} showStatus={false}>
                         <div>
@@ -100,7 +100,7 @@ const HomePage = () => {
             </section>
 
             <section className="py-16 bg-gray-100">
-                <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8">
+                <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8 md:grid-cols-3">
                     {[
                         { title: 'Керування готелями', desc: 'Додавайте, редагуйте готелі, завантажуйте фото.', icon: <FaHotel className="text-blue-500 text-3xl mb-3" /> },
                         { title: 'Швидке бронювання', desc: 'Все працює як треба. І швидко.', icon: <MdSpeed className="text-blue-500 text-3xl mb-3" /> },
@@ -120,7 +120,7 @@ const HomePage = () => {
                 </div>
             </section>
 
-            <section className="py-20 bg-blue-700 !text-white text-center">
+            <section className="py-20 bg-blue-700 !text-white text-center text-4xl">
                 <motion.h2
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}

@@ -42,7 +42,7 @@ const LoginPage = () => {
                 initial={{ y: -50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md mx-4"
+                className="bg-white px-4 py-6 sm:p-8 rounded-xl shadow-2xl w-full w-full mx-4 mx-4"
             >
                 <h2 className="text-3xl font-bold text-center mb-6 text-blue-600">Авторизація</h2>
 

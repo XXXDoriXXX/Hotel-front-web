@@ -79,35 +79,66 @@ const EmployeesPage = ({ hotelId }) => {
             ) : employees.length === 0 ? (
                 <p>Немає працівників.</p>
             ) : (
-                <table className="w-full mt-4 border rounded-lg overflow-hidden text-sm">
-                    <thead className="bg-gray-100 text-gray-700">
-                    <tr>
-                        <th className="px-4 py-3 text-left">Ім'я</th>
-                        <th className="px-4 py-3 text-left">Прізвище</th>
-                        <th className="px-4 py-3 text-left">Посада</th>
-                        <th className="px-4 py-3 text-left">Зарплата</th>
-                        <th className="px-4 py-3 text-center">Дії</th>
-                    </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                    {employees.map((emp) => (
-                        <tr key={emp.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-2 text-blue-600 cursor-pointer hover:underline" onClick={() => openDetails(emp)}>{emp.first_name}</td>
-                            <td className="px-4 py-2 text-blue-600 cursor-pointer hover:underline" onClick={() => openDetails(emp)}>{emp.last_name}</td>
-                            <td className="px-4 py-2">{emp.position}</td>
-                            <td className="px-4 py-2">{emp.salary} $</td>
-                            <td className="px-4 py-2 text-center space-x-3">
-                                <button onClick={() => handleEdit(emp)} className="text-blue-600 hover:text-blue-800">
-                                    <FaEdit />
-                                </button>
-                                <button onClick={() => setEmployeeToDelete(emp)} className="text-red-600 hover:text-red-800">
-                                    <FaTrash />
-                                </button>
-                            </td>
+                <>
+                    {/* Таблиця — тільки для sm і більше */}
+                    <table className="hidden sm:table w-full mt-4 border rounded-lg overflow-hidden text-sm">
+                        <thead className="bg-gray-100 text-gray-700">
+                        <tr>
+                            <th className="px-4 py-3 text-left">Ім'я</th>
+                            <th className="px-4 py-3 text-left">Прізвище</th>
+                            <th className="px-4 py-3 text-left">Посада</th>
+                            <th className="px-4 py-3 text-left">Зарплата</th>
+                            <th className="px-4 py-3 text-center">Дії</th>
                         </tr>
-                    ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y">
+                        {employees.map((emp) => (
+                            <tr key={emp.id} className="hover:bg-gray-50">
+                                <td className="px-4 py-2 text-blue-600 cursor-pointer hover:underline" onClick={() => openDetails(emp)}>
+                                    {emp.first_name}
+                                </td>
+                                <td className="px-4 py-2 text-blue-600 cursor-pointer hover:underline" onClick={() => openDetails(emp)}>
+                                    {emp.last_name}
+                                </td>
+                                <td className="px-4 py-2">{emp.position}</td>
+                                <td className="px-4 py-2">{emp.salary} $</td>
+                                <td className="px-4 py-2 text-center space-x-3">
+                                    <button onClick={() => handleEdit(emp)} className="text-blue-600 hover:text-blue-800">
+                                        <FaEdit />
+                                    </button>
+                                    <button onClick={() => setEmployeeToDelete(emp)} className="text-red-600 hover:text-red-800">
+                                        <FaTrash />
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+
+                    {/* Мобільний варіант: картки */}
+                    <div className="sm:hidden mt-4 space-y-4">
+                        {employees.map((emp) => (
+                            <div
+                                key={emp.id}
+                                className="bg-white rounded-lg shadow p-4 border border-gray-200 flex flex-col gap-2"
+                            >
+                                <div className="font-semibold text-blue-800">
+                                    {emp.first_name} {emp.last_name}
+                                </div>
+                                <div className="text-sm text-gray-700">Посада: {emp.position}</div>
+                                <div className="text-sm text-gray-700">Зарплата: {emp.salary} $</div>
+                                <div className="flex justify-end gap-4 mt-2">
+                                    <button onClick={() => handleEdit(emp)} className="text-blue-600 hover:text-blue-800">
+                                        <FaEdit />
+                                    </button>
+                                    <button onClick={() => setEmployeeToDelete(emp)} className="text-red-600 hover:text-red-800">
+                                        <FaTrash />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </>
             )}
 
             <Modal open={showForm} onClose={() => setShowForm(false)} title={editingEmployee ? 'Редагування працівника' : 'Новий працівник'}>
