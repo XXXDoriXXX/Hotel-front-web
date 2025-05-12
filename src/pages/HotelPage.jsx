@@ -299,7 +299,7 @@ const HotelPage = () => {
                     disabled={isRefreshing}
                     className="ml-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition mb-8 disabled:opacity-50"
                 >
-                    {isRefreshing ? 'Оновлення...' : '🔄 Оновити дані'}
+                    {isRefreshing ? 'Оновлення...' : 'Оновити дані'}
                 </button>
 
                 <div className="flex overflow-x-auto whitespace-nowrap border-b !border-gray-200 mb-6 scrollbar-hide">
