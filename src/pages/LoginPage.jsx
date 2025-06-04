@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import {loginUser} from "../api/api.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const LoginPage = () => {
+    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [errors, setErrors] = useState({});
-    const navigate = useNavigate();
     const [apiError, setApiError] = useState(null);
-
+    const navigate = useNavigate();
     const validateForm = () => {
         const newErrors = {};
         if (!email) newErrors.email = 'Email обов\'язковий';
@@ -24,18 +24,12 @@ const LoginPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
-
-        try {
-            const response = await loginUser({ email, password });
-            localStorage.setItem('token', response.token);
-            navigate('/');
-        } catch (error) {
-            setApiError(error.message);
-
-            if (error.errors) {
-                setErrors(prev => ({ ...prev, ...error.errors }));
-            }
+        const result = await login({ email, password });
+        if (!result.success) {
+            setApiError(result.error);
+            return;
         }
+        navigate('/');
     };
     return (
         <motion.div
@@ -48,7 +42,7 @@ const LoginPage = () => {
                 initial={{ y: -50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md mx-4"
+                className="bg-white px-4 py-6 sm:p-8 rounded-xl shadow-2xl w-100 mx-4 mx-4"
             >
                 <h2 className="text-3xl font-bold text-center mb-6 text-blue-600">Авторизація</h2>
 
@@ -95,7 +89,7 @@ const LoginPage = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg mb-4 transition-colors duration-300"
+                        className="w-full !bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg mb-4 transition-colors duration-300"
                     >
                         Увійти
                     </motion.button>

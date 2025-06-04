@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from "framer-motion";
-import {registerUser} from "../api/api.js";
-
+import { useAuth } from "../context/AuthContext.jsx";
 const RegisterPage = () => {
+    const { register } = useAuth();
     const [first_name, setFirstName] = useState('');
     const [last_name, setLastName] = useState('');
     const [email, setEmail] = useState('');
@@ -11,8 +11,8 @@ const RegisterPage = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [errors, setErrors] = useState({});
-    const navigate = useNavigate();
     const [apiError, setApiError] = useState(null);
+    const navigate = useNavigate();
 
     const validateForm = () => {
         const newErrors = {};
@@ -33,16 +33,12 @@ const RegisterPage = () => {
         e.preventDefault();
         if (!validateForm()) return;
 
-        try {
-            await registerUser({ first_name,last_name,email,phone, password });
-            navigate('/login');
-        } catch (error) {
-            setApiError(error.message);
-
-            if (error.errors) {
-                setErrors(prev => ({ ...prev, ...error.errors }));
-            }
+        const result = await register({ first_name, last_name, email, phone, password });
+        if (!result.success) {
+            setApiError(result.error);
+            return;
         }
+        navigate('/');
     };
 
     return (
@@ -160,7 +156,7 @@ const RegisterPage = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg mb-4 transition-colors duration-300"
+                        className="w-full !bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg mb-4 transition-colors duration-300"
                     >
                         Зареєструватися
                     </motion.button>

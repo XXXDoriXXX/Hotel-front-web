@@ -21,6 +21,15 @@
     transform: rotate(360deg);
   }
 }
+@layer utilities {
+  .safe-px {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  .safe-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4;
+  }
+}
 
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
