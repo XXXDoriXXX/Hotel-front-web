@@ -4,6 +4,7 @@ import { api } from '../api/api';
 import MapPicker from '../components/MapPicker';
 import { FaArrowLeft, FaSave, FaTrash } from 'react-icons/fa';
 import { ImSpinner2 } from 'react-icons/im';
+import { GOOGLE_MAPS_API } from '../api/api';
 
 const HotelEditPage = () => {
     const { id } = useParams();
@@ -146,7 +147,7 @@ const HotelEditPage = () => {
     };
 
     const handleLocationSelect = async (pos) => {
-        const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${pos.lat},${pos.lng}&key=YOUR_GOOGLE_MAPS_API`);
+        const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${pos.lat},${pos.lng}&key=${GOOGLE_MAPS_API}`);
         const data = await res.json();
         const comp = data.results[0]?.address_components || [];
 
