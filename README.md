@@ -73,9 +73,7 @@ This admin panel enables hotel owners and administrators to efficiently oversee 
 
 ## Technologies
 
-- **Language:** JavaScript (React / Vue / Angular) *(specify actual framework if known)*
-- **State Management:** Redux / Context API / Vuex / etc.
-- **UI Components:** Material UI / Ant Design / Bootstrap / etc.
+- **Language:** JavaScript React 
 - **API Integration:** RESTful API (integrates with [Hotel-back](https://github.com/XXXDoriXXX/Hotel-back))
 - **Charting/Visualization:** Chart.js / Recharts / etc.
 
