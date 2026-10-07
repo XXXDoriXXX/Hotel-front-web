@@ -1,96 +1,85 @@
 # Hotel-front-web
 
-![JavaScript](https://img.shields.io/badge/language-JavaScript-yellow.svg)
-![Frontend](https://img.shields.io/badge/type-Frontend-blue.svg)
-![Status](https://img.shields.io/badge/status-active-brightgreen.svg)
+Web panel for hotel owners: manage hotels, rooms, staff and bookings, and follow statistics.
 
-## Description
+**Live demo:** https://hotel-front-web.vercel.app
 
-**Hotel-front-web** is the web-based admin panel for hotel owners, designed as part of the Hotel management ecosystem. Built with JavaScript, this application provides a powerful, intuitive interface for managing hotels, rooms, reservations, analytics, and more — all from your browser.
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![React Router](https://img.shields.io/badge/React%20Router-7-CA4245?logo=reactrouter&logoColor=white)
+![Recharts](https://img.shields.io/badge/Recharts-2-22B5BF)
+![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?logo=vercel&logoColor=white)
 
-This admin panel enables hotel owners and administrators to efficiently oversee hotel operations, monitor key metrics, manage bookings, and interact with guests.
+## Overview
 
----
+This is the owner-facing client of the Hotel project. It talks to the [Hotel-back](https://github.com/XXXDoriXXX/Hotel-back) REST API. The interface language is Ukrainian.
 
-## Key Features
+| Repository | Role |
+| --- | --- |
+| [Hotel-back](https://github.com/XXXDoriXXX/Hotel-back) | REST API used by this app |
+| [Hotel-front-web](https://github.com/XXXDoriXXX/Hotel-front-web) | This web panel |
+| [HotelMobileApp](https://github.com/XXXDoriXXX/HotelMobileApp) | Android app for guests, uses the same API |
+| [HotelFastApi](https://github.com/XXXDoriXXX/HotelFastApi) | Earlier prototype of the API (legacy) |
 
-- 🏨 **Hotel Management**  
-  Add, update, and manage hotel details, rooms, photos, and amenities.
+```
+Owner browser ──> Hotel-front-web (React, Vercel) ──> Hotel-back (FastAPI) ──> PostgreSQL
+```
 
-- 👤 **User & Staff Management**  
-  Manage hotel staff roles, permissions, and guest data.
+## Features
 
-- 📅 **Booking Control**  
-  View, confirm, modify, and cancel reservations in real time.
+- Owner registration and login (JWT stored in the browser, sent as a bearer token)
+- Dashboard with the owner's hotels
+- Create, edit and delete hotels with images, amenities and a map location picker (Google Maps)
+- Create and edit rooms with images
+- Booking list per hotel
+- Employee management with salary history and charts
+- Statistics: general, financial, client and engagement charts
+- Profile page and profile editing, Stripe account connection status
+- Toast notifications
 
-- 💬 **Guest Interactions**  
-  Access guest reviews and feedback, respond to queries and complaints.
+## Tech stack
 
-- 📊 **Analytics Dashboard**  
-  Visualize key performance indicators such as occupancy rates, revenue, and booking trends.
+React 19, Vite 6, Tailwind CSS 4, React Router 7, Axios, Recharts, Google Maps (`@react-google-maps/api`), Framer Motion, React Toastify, dayjs, ESLint.
 
-- 🛎️ **Notifications**  
-  Receive real-time alerts for new bookings, cancellations, and important events.
+## Getting started
 
-## Getting Started
+Requirements: Node.js 18 or newer and npm.
 
-### Prerequisites
+```bash
+git clone https://github.com/XXXDoriXXX/Hotel-front-web.git
+cd Hotel-front-web
+npm install
+```
 
-- Node.js (v14+ recommended)
-- npm or yarn
+Create a `.env` file in the project root:
 
-### Installation
+```
+VITE_API_URL=http://localhost:8000
+VITE_GOOGLE_MAPS_API=your-google-maps-api-key
+```
 
-1. **Clone the repository:**
-    ```bash
-    git clone https://github.com/XXXDoriXXX/Hotel-front-web.git
-    cd Hotel-front-web
-    ```
+Start the dev server:
 
-2. **Install dependencies:**
-    ```bash
-    npm install
-    # or
-    yarn install
-    ```
+```bash
+npm run dev
+```
 
-3. **Configure environment variables:**  
-   Create a `.env` file (if required) and set API endpoints and keys.
+Other scripts: `npm run build`, `npm run preview`, `npm run lint`.
 
-4. **Run the development server:**
-    ```bash
-    npm start
-    # or
-    yarn start
-    ```
+The backend must allow your dev origin in its CORS list (see `main.py` in Hotel-back).
 
-5. **Open your browser and navigate to**  
-    ```
-    http://localhost:3000
-    ```
+## Environment variables
 
----
+| Variable | Required | Description |
+| --- | --- | --- |
+| `VITE_API_URL` | yes | Base URL of the Hotel-back API |
+| `VITE_GOOGLE_MAPS_API` | yes | Google Maps API key (geocoding and map picker) |
 
-## Technologies
+## Deployment
 
-- **Language:** JavaScript React 
-- **API Integration:** RESTful API (integrates with [Hotel-back](https://github.com/XXXDoriXXX/Hotel-back))
-- **Charting/Visualization:** Chart.js / Recharts / etc.
+The project is deployed on Vercel. `vercel.json` rewrites all routes to `index.html` so client-side routing works.
 
----
+## Author
 
-## Contribution
-
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature/your-feature-name`).
-3. Make your changes and commit (`git commit -am 'Add some feature'`).
-4. Push to your branch.
-5. Open a pull request.
-
----
-
-## Contact & Support
-
-- Author: [XXXDoriXXX](https://github.com/XXXDoriXXX)
-- For questions and suggestions, please use [Issues](https://github.com/XXXDoriXXX/Hotel-front-web/issues)
-
+[XXXDoriXXX](https://github.com/XXXDoriXXX)
