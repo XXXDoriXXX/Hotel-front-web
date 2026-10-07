@@ -4,6 +4,8 @@ import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
 const containerStyle = { width: '100%', height: '300px' };
 const defaultCenter = { lat: 48.3794, lng: 31.1656 };
 
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API;
+
 const libraries = ['places'];
 
 const MapPicker = ({ onLocationSelect, initialPosition = defaultCenter, readonly = false }) => {
@@ -14,13 +16,13 @@ const MapPicker = ({ onLocationSelect, initialPosition = defaultCenter, readonly
     }, [initialPosition]);
 
     const { isLoaded } = useJsApiLoader({
-        googleMapsApiKey: 'AIzaSyCWzyQ9QxTFJonvEXp-ZZ7qsyNN5YtiWbw',
+        googleMapsApiKey: GOOGLE_MAPS_API_KEY,
         libraries,
     });
 
     const geocodeLatLng = async (lat, lng) => {
         const response = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=AIzaSyCWzyQ9QxTFJonvEXp-ZZ7qsyNN5YtiWbw`
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`
         );
         const data = await response.json();
         return data?.results?.[0]?.formatted_address || '';
